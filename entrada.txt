@@ -1,0 +1,11 @@
+main:
+$a = -14;
+$b = 3;
+print($b);
+$b= $b+2;
+$d = &$b;
+print($d);
+$d = $d+2;
+print($d);
+print($b);
+
