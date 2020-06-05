@@ -153,6 +153,7 @@ precedence = (
 from expresiones import *
 from instrucciones import *
 from etiquetas import *
+from ts import *
 from arbol import *
 
 
@@ -191,8 +192,7 @@ def p_INS(t) :
                 | SALTO
                 | SIF
                 | EXIT
-                | UNSET
-                | CONVERTIR'''
+                | UNSET'''
     t[0] = t[1]
 
 def p_INS_PRINT(t) :
@@ -220,11 +220,7 @@ def p_UNSET(t) :
     t[0] =Unset(t[3])
 
 
-def p_CONVERTIR(t) :
-    '''CONVERTIR    : dollar ID igual parea wint parec dollar ID ptocoma
-                    | 
-                    '''
-    t[0] =GoTo(t[2])
+
 
 
 def p_SIF(t) :
@@ -312,14 +308,21 @@ def p_expresion_float(t):
 
 def p_expresion_id(t):
     'EXP   : dollar ID'
-    t[0] = ExpresionIdentificador(t[2])
+    t[0] = Variable(t[2])
 
 
 def p_EXP_STR(t) :
     'EXP     : CADENA'
     t[0] = ExpresionDobleComilla(t[1])
 
-
+def p_CONVERTIR(t) :
+    '''EXP    :  parea wint parec EXP 
+                | parea wfloat parec EXP 
+                | parea wchar parec EXP 
+                    '''
+    if t[2] == 'int'  : t[0] = ExpConvertida(t[4], TIPO_DATO.INTEGER)
+    elif t[2] == 'float': t[0] = ExpConvertida(t[4], TIPO_DATO.FLOAT)
+    elif t[2] == 'char': t[0] = ExpConvertida(t[4], TIPO_DATO.CHAR)
 
 
 

@@ -51,8 +51,8 @@ class Aritmetica(Exp) :
         self.operador = operador
     
     def MaxType(self,a,b):
-        if (a == TS.TIPO_DATO.STRING) or (b == TS.TIPO_DATO.STRING):
-            return TS.TIPO_DATO.STRING
+        if (a == TS.TIPO_DATO.CHAR) or (b == TS.TIPO_DATO.CHAR):
+            return TS.TIPO_DATO.CHAR
         else:
             return TS.TIPO_DATO.INTEGER
 
@@ -70,7 +70,7 @@ class Aritmetica(Exp) :
             if self.operador == OPERACION_ARITMETICA.POR : return exp1 * exp2
             if self.operador == OPERACION_ARITMETICA.DIVIDIDO : return exp1 / exp2
             if self.operador == OPERACION_ARITMETICA.MODULO : return exp1 % exp2
-        elif maxi ==TS.TIPO_DATO.STRING:
+        elif maxi ==TS.TIPO_DATO.CHAR:
             if self.operador == OPERACION_ARITMETICA.MAS : return str(exp1) + str(exp2)
 
 
@@ -134,7 +134,7 @@ class ExpresionFloat(Exp) :
     def GetTipo(self,ts):
         return TS.TIPO_DATO.FLOAT
 
-class ExpresionIdentificador(Exp) :
+class Variable(Exp) :
     '''
         Esta clase representa un identificador.
     '''
@@ -155,7 +155,17 @@ class ExpresionIdentificador(Exp) :
                 if referencia != None:
                     return referencia.valor
         return None
-    
+
+    def GetTipo(self,ts):
+        var = ts.obtener(self.id)
+        if var != None:
+            if var.reference == None:
+                return var.tipo
+            else:
+                referencia = ts.obtener(var.reference)
+                if referencia != None:
+                    return referencia.tipo
+        return None
 
         
 class ExpresionDobleComilla(Exp) :
@@ -174,7 +184,7 @@ class ExpresionDobleComilla(Exp) :
         return self.val
 
     def GetTipo(self,ts):
-        return TS.TIPO_DATO.STRING
+        return TS.TIPO_DATO.CHAR
 
 class ExpresionCadenaNumerico(Exp) :
     '''
@@ -259,3 +269,53 @@ class Bitwise() :
 
     def GetTipo(self,ts):
         return TS.TIPO_DATO.INTEGER
+
+
+
+class ExpConvertida(Exp) :
+    '''
+        Esta clase representa una expresión numérica tratada como cadena.
+        Recibe como parámetro la expresión numérica
+    '''
+    def __init__(self, exp, tipo) :
+        self.exp = exp
+        self.tipo = tipo
+
+    def GetValor(self,ts):
+        extipo = self.exp.GetTipo(ts)
+        exvalor = self.exp.GetValor(ts)
+       # print("tipo: "+str(extipo))
+       # print("valor: "+str(exvalor))
+        if (self.tipo == TS.TIPO_DATO.INTEGER):
+            if (extipo == TS.TIPO_DATO.FLOAT):
+                return round(exvalor,0)
+            if (extipo == TS.TIPO_DATO.CHAR):
+                fletter = exvalor[0]
+                return ord(fletter)
+        elif (self.tipo == TS.TIPO_DATO.FLOAT):
+            if (extipo == TS.TIPO_DATO.INTEGER):
+                return float(exvalor)
+            if (extipo == TS.TIPO_DATO.CHAR):
+                fletter = exvalor[0]
+                return float(ord(fletter))
+        elif(self.tipo == TS.TIPO_DATO.CHAR):
+            if (extipo == TS.TIPO_DATO.INTEGER):
+                if(exvalor >=0) and (exvalor <=255):
+                    return chr(exvalor)
+                else:
+                    mod = exvalor % 256
+                    return chr(mod)
+            if (extipo == TS.TIPO_DATO.FLOAT):
+                ent = round(exvalor,0)
+                if(ent >=0) and (ent <=255):
+                    return chr(ent)
+                else:
+                    mod = ent % 256
+                    return chr(mod)
+
+        else:
+            print("Error: No se puede convertir a tipo")
+    
+    def GetTipo(self,ts):
+        return self.tipo
+

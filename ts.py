@@ -3,7 +3,7 @@ from enum import Enum
     
 class TIPO_DATO(Enum) :
     INTEGER = 1
-    STRING = 2
+    CHAR = 2
     FLOAT = 3
     BOOLEAN = 4
     ARRAY = 5

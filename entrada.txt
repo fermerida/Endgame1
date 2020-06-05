@@ -1,11 +1,7 @@
 main:
 $a = -14;
-$b = 3;
+$b = 49;
+$b = (char)$b;
+$e = (int)$b;
 print($b);
-$b= $b+2;
-$d = &$b;
-print($d);
-$d = $d+2;
-print($d);
-print($b);
-
+print($e);
