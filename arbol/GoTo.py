@@ -8,7 +8,7 @@ class GoTo(Instruccion) :
     def __init__(self,  id) :
         self.id = id
 
-    def ejecutar(self, ts):
+    def ejecutar(self, ts,ms):
         
         result = None
         Simbolo = ts.obtener(self.id)

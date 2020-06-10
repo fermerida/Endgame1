@@ -12,7 +12,7 @@ class If(Instruccion) :
         self.expLogica = expLogica
         self.instrIfVerdadero = instrIfVerdadero
     
-    def ejecutar(self, ts):
+    def ejecutar(self, ts,ms):
         val =self.expLogica.GetValor(ts)
         if val :
             ret = self.instrIfVerdadero.ejecutar(ts)    

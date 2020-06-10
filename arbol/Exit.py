@@ -8,6 +8,6 @@ class Exit(Instruccion) :
     def __init__(self) :
         pass
 
-    def ejecutar(self, ts):
+    def ejecutar(self, ts,ms):
         return False
 

@@ -9,10 +9,9 @@ from ts import *
 from arbol import *
 from arreglo import*
 
-class Gramatica():
+class Arbol():
     
     def __init__(self,ms_gramatica) :
-        self.ms_gramatica = ms_gramatica
 
    
         
@@ -152,6 +151,17 @@ class Gramatica():
     def build(self,**kwargs):
         self.errors = []
         return  lex.lex(module=self, **kwargs)
+
+
+
+
+
+
+
+
+
+
+
 
 
     # Asociación de operadores y precedencia
@@ -376,9 +386,3 @@ class Gramatica():
         self.parser = yacc.yacc(module = self)
         return  self.parser.parse(input)
 
-
-    '''def Errors(self) :
-        if len(self.ms_gramatica.mensajes)==0:
-            return None
-        else:
-            return self.ms_gramatica'''

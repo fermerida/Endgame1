@@ -11,7 +11,7 @@ class RefAsignacion(Instruccion) :
         self.reference = reference
         self.rol = rol
 
-    def ejecutar(self, ts):
+    def ejecutar(self, ts,ms):
         id = ts.obtener(self.id)
         reference = ts.obtener(self.reference)
         if id is not None:

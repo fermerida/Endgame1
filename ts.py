@@ -3,10 +3,11 @@ from enum import Enum
     
 class TIPO_DATO(Enum) :
     INTEGER = 1
-    STRING = 2
+    CHAR = 2
     FLOAT = 3
     BOOLEAN = 4
     ARRAY = 5
+    STRUCT = 6
 
 class Simbolo() :
     'Esta clase representa un simbolo dentro de nuestra tabla de simbolos'
@@ -50,4 +51,4 @@ class TablaDeSimbolos() :
 
     def printts(self) :
         for simbolo in self.simbolos:
-            print("Simbolo: "+ str(self.simbolos[simbolo].id) + " Value:" +str(self.simbolos[simbolo].valor))
+            print("Simbolo: "+ str(self.simbolos[simbolo].id) + " Tipo: " +str(self.simbolos[simbolo].tipo) +" Rol: "+str(self.simbolos[simbolo].rol)  +" Value:" +str(self.simbolos[simbolo].valor))

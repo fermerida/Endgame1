@@ -9,28 +9,30 @@ class Etiqueta() :
         self.tipo = tipo
         self.instrucciones = instrucciones
         self.next = None
+        self.rol = "Etiqueta"
 
     
-    def ejecutar(self, ts):
+    def ejecutar(self, ts,ms):
         result = None
         for instr in self.instrucciones :
-            result = instr.ejecutar(ts)
+            instr.etiqueta = self
+            result = instr.ejecutar(ts,ms)
             if result == False:
                # print("iHere")
                 break
         if  (self.next != None) and (result is None) :
            # print("I here too")
-            self.next.ejecutar(ts)
+            self.next.ejecutar(ts,ms)
 
 
 
-    def inicializar(self, ts,next):
-        simbolo = TS.Simbolo(self.id, self.tipo, self,"Etiqueta")    
+    def inicializar(self, ts,ms,next):
+        simbolo = TS.Simbolo(self.id, "Etiqueta", "Instrucciones internas","Etiqueta")    
         ts.agregar(simbolo)
         self.next = next
 
-    def actualizar(self, ts,tipo,rol):
-        simbolo = TS.Simbolo(self.id, tipo,self,rol)
+    def actualizar(self,ts):
+        simbolo = TS.Simbolo(self.id,"Etiqueta", "Instrucciones internas",self.rol)
         ts.actualizar(simbolo)
 
 class ListaEtiqueta() :

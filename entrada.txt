@@ -1,11 +1,15 @@
 main:
-$a = -14;
-$b = 3;
+$a = -14; 
+$b = 49; 
+$b = (char)$b;
+$e = (int)$b; 
+$c= array();
+$c[7][1] = 10;
+$d['hey']= 3;
+printing:
 print($b);
-$b= $b+2;
-$d = &$b;
-print($d);
-$d = $d+2;
-print($d);
-print($b);
+print($e);
+print($c[1][1]);
 
+gaol:
+exit;
