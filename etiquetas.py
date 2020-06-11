@@ -9,7 +9,7 @@ class Etiqueta() :
         self.tipo = tipo
         self.instrucciones = instrucciones
         self.next = None
-        self.rol = "Etiqueta"
+        self.rol = "Sentencia de control"
 
     
     def ejecutar(self, ts,ms):
@@ -27,12 +27,12 @@ class Etiqueta() :
 
 
     def inicializar(self, ts,ms,next):
-        simbolo = TS.Simbolo(self.id, "Etiqueta", "Instrucciones internas","Etiqueta")    
+        simbolo = TS.Simbolo(self.id, "Etiqueta", self,"Etiqueta")    
         ts.agregar(simbolo)
         self.next = next
 
     def actualizar(self,ts):
-        simbolo = TS.Simbolo(self.id,"Etiqueta", "Instrucciones internas",self.rol)
+        simbolo = TS.Simbolo(self.id,"Etiqueta", self,self.rol)
         ts.actualizar(simbolo)
 
 class ListaEtiqueta() :

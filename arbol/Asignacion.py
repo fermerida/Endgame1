@@ -1,6 +1,7 @@
 from instrucciones import Instruccion
 import ts as TS
 from arreglo import *
+import mensajes as MS
 
 from enum import Enum
 
@@ -97,7 +98,7 @@ class Asignacion(Instruccion) :
             level=value
             for i in range(len(accesos)):
                 if i==(len(accesos))-1:
-                    #print("fin"+str(i))
+                    print("fin"+str(i)+str(accesos[i])+str(val)+str(level))
                     #guardar valor
                     level[accesos[i]] = val
                 else:

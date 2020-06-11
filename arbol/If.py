@@ -13,9 +13,9 @@ class If(Instruccion) :
         self.instrIfVerdadero = instrIfVerdadero
     
     def ejecutar(self, ts,ms):
-        val =self.expLogica.GetValor(ts)
+        val =self.expLogica.GetValor(ts,ms)
         if val :
-            ret = self.instrIfVerdadero.ejecutar(ts)    
+            ret = self.instrIfVerdadero.ejecutar(ts,ms)    
             if ret == False:
                 return False     
    

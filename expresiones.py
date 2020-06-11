@@ -125,6 +125,20 @@ class ExpresionInteger(Exp) :
     def GetTipo(self,ts,ms):
         return TS.TIPO_DATO.INTEGER
 
+class RandomList(Exp) :
+    '''
+        Esta clase representa una expresión numérica entera o decimal.
+    '''
+
+    def __init__(self, val = 0) :
+        self.val = val
+
+
+    def GetValor(self,ts,ms):
+        return self.val; 
+
+    def GetTipo(self,ts,ms):
+        return TS.TIPO_DATO.ARRAY
 class ExpresionFloat(Exp) :
     '''
         Esta clase representa una expresión numérica entera o decimal.
@@ -328,9 +342,11 @@ class ExpConvertida(Exp) :
         Esta clase representa una expresión numérica tratada como cadena.
         Recibe como parámetro la expresión numérica
     '''
-    def __init__(self, exp, tipo) :
+    def __init__(self, exp, tipo,linea,columna) :
         self.exp = exp
         self.tipo = tipo
+        self.linea =linea
+        self.columna = columna
 
     def GetValor(self,ts,ms):
         extipo = self.exp.GetTipo(ts,ms)
@@ -340,15 +356,31 @@ class ExpConvertida(Exp) :
         if (self.tipo == TS.TIPO_DATO.INTEGER):
             if (extipo == TS.TIPO_DATO.FLOAT):
                 return round(exvalor,0)
-            if (extipo == TS.TIPO_DATO.CHAR):
+            elif (extipo == TS.TIPO_DATO.INTEGER):
+                return exvalor
+            elif (extipo == TS.TIPO_DATO.CHAR):
                 fletter = exvalor[0]
                 return ord(fletter)
+            elif (extipo == TS.TIPO_DATO.ARRAY):
+                fletter = self.GetFirst(exvalor)
+                return ExpConvertida(fletter,self.tipo,self.linea,self.columna).GetValor(ts,ms)
+            else:
+                ms.AddMensaje(MS.Mensaje("No se puede convertir a tipo",self.linea,self.columna,True,"Semantico"))
+                return None
         elif (self.tipo == TS.TIPO_DATO.FLOAT):
             if (extipo == TS.TIPO_DATO.INTEGER):
                 return float(exvalor)
-            if (extipo == TS.TIPO_DATO.CHAR):
+            elif (extipo == TS.TIPO_DATO.FLOAT):
+                return exvalor
+            elif (extipo == TS.TIPO_DATO.CHAR):
                 fletter = exvalor[0]
                 return float(ord(fletter))
+            elif (extipo == TS.TIPO_DATO.ARRAY):
+                fletter = self.GetFirst(exvalor)
+                return fletter
+            else:
+                ms.AddMensaje(MS.Mensaje("No se puede convertir a tipo",self.linea,self.columna,True,"Semantico"))
+                return None
         elif(self.tipo == TS.TIPO_DATO.CHAR):
             if (extipo == TS.TIPO_DATO.INTEGER):
                 if(exvalor >=0) and (exvalor <=255):
@@ -356,13 +388,22 @@ class ExpConvertida(Exp) :
                 else:
                     mod = exvalor % 256
                     return chr(mod)
-            if (extipo == TS.TIPO_DATO.FLOAT):
+            elif (extipo == TS.TIPO_DATO.FLOAT):
                 ent = round(exvalor,0)
                 if(ent >=0) and (ent <=255):
                     return chr(ent)
                 else:
                     mod = ent % 256
                     return chr(mod)
+            elif (extipo == TS.TIPO_DATO.CHAR):
+                fletter = exvalor[0]
+                return ord(fletter)
+            elif (extipo == TS.TIPO_DATO.ARRAY):
+                fletter = self.GetFirst(exvalor)
+                return fletter
+            else:
+                ms.AddMensaje(MS.Mensaje("No se puede convertir a tipo",self.linea,self.columna,True,"Semantico"))
+                return None
 
         else:
             print("Error: No se puede convertir a tipo")
@@ -371,4 +412,22 @@ class ExpConvertida(Exp) :
     
     def GetTipo(self,ts,ms):
         return self.tipo
+    
+    def GetFirst(self,elementos):
+        i=0
+        returnee = 0
+        while i < 100:
+            if i in elementos:
+                returnee= elementos[i]
+                break
+            i+=1
+        if isinstance(returnee, int):
+            return ExpresionInteger(returnee)
+        elif isinstance(returnee, float):
+            return ExpresionFloat(returnee)
+        
+        elif isinstance(returnee, dict):
+            return RandomList(returnee)
+        else:
+            return ExpresionDobleComilla(returnee)
 

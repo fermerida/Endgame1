@@ -1,24 +1,34 @@
 from instrucciones import Instruccion
+from etiquetas import Etiqueta
+import mensajes as MS
+
 class GoTo(Instruccion) :
     '''
         Esta clase representa la instrucción imprimir.
         La instrucción imprimir únicamente tiene como parámetro una cadena
     '''
 
-    def __init__(self,  id) :
+    def __init__(self,  id,linea, columna) :
         self.id = id
+        self.linea = linea
+        self.columna = columna
 
     def ejecutar(self, ts,ms):
-        
+        #ts.printts()
         result = None
         Simbolo = ts.obtener(self.id)
-        Etiqueta = Simbolo.valor
-        for instr in Etiqueta.instrucciones :
-            result = instr.ejecutar(ts)
-            if result == False:
-                break
-        if  (Etiqueta.next != None) and (result is None) :
-            Etiqueta.next.ejecutar(ts)
+        et = Simbolo.valor
+        if  isinstance(et, Etiqueta):
+            for instr in et.instrucciones :
+                result = instr.ejecutar(ts,ms)
+                if result == False:
+                    break
+            if  (et.next != None) and (result is None) :
+                et.next.ejecutar(ts,ms)
+        else:
+            ms.AddMensaje(MS.Mensaje("El salto no se dirige hacia una etiqueta",self.linea,self.columna,True,"Semantico"))
+
+        
         
         return False
 

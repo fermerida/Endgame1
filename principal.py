@@ -4,6 +4,8 @@ import mensajes as MS
 from instrucciones import *
 from arbol import *
 from etiquetas import *
+import AST as AR
+from TreeMaker import *
 
 def procesar_instrucciones(instrucciones, ts,ms) :
     ## lista de instrucciones recolectadas
@@ -18,6 +20,7 @@ def procesar_instrucciones(instrucciones, ts,ms) :
     for instr in instrucciones:
         instr.actualizar(ts)
 
+correct = False
 f = open("./entrada.txt", "r")
 input = f.read()
 
@@ -39,6 +42,13 @@ if (ms_global.correcto):
     prints = ms_global.GetMensajes()
     for Mensaje in prints:
         print(Mensaje.constructMensaje())
+    arparser = AR.AST()
+    raiz = arparser.parse(input)
+    graf = TreeMaker(raiz)
+    try:
+        graf.crearArbol()
+    except:
+        print ("No se genero el arbol")
 else:
     print("Se encontraron errores")
     errores = ms_global.GetErrores()
@@ -48,4 +58,4 @@ else:
     for Mensaje in errores:
         print(Mensaje.constructError())
 
-ts_global.printts()
+#ts_global.printts()

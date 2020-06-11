@@ -1,4 +1,6 @@
 from instrucciones import Instruccion
+import mensajes as MS
+
 class Exit(Instruccion) :
     '''
         Esta clase representa la instrucción imprimir.

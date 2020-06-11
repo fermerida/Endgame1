@@ -244,7 +244,7 @@ class Gramatica():
 
     def p_SALTO(self,t) :
         'SALTO   : wgoto ID ptocoma'
-        t[0] =GoTo(t[2])
+        t[0] =GoTo(t[2],t.slice[1].lineno,t.slice[1].lexpos)
 
     def p_EXIT(self,t) :
         'EXIT   : wexit ptocoma'
@@ -354,9 +354,9 @@ class Gramatica():
                     | parea wfloat parec EXP 
                     | parea wchar parec EXP 
                         '''
-        if t[2] == 'int'  : t[0] = ExpConvertida(t[4], TIPO_DATO.INTEGER)
-        elif t[2] == 'float': t[0] = ExpConvertida(t[4], TIPO_DATO.FLOAT)
-        elif t[2] == 'char': t[0] = ExpConvertida(t[4], TIPO_DATO.CHAR)
+        if t[2] == 'int'  : t[0] = ExpConvertida(t[4], TIPO_DATO.INTEGER,t.slice[2].lineno,t.slice[2].lexpos)
+        elif t[2] == 'float': t[0] = ExpConvertida(t[4], TIPO_DATO.FLOAT,t.slice[2].lineno,t.slice[2].lexpos)
+        elif t[2] == 'char': t[0] = ExpConvertida(t[4], TIPO_DATO.CHAR,t.slice[2].lineno,t.slice[2].lexpos)
 
 
 
@@ -366,9 +366,11 @@ class Gramatica():
 
 
     def p_error(self,t):
-        t.value
-        self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(t.value),t.lineno,t.lexpos ,True,"Sintactico"))
-        print("Error sintáctico en '%s'" % t.value)
+        if t is not None:
+            self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(t.value),t.lineno,t.lexpos ,True,"Sintactico"))
+            print("Error sintáctico en '%s'" % t.value)
+        else:
+            self.ms_gramatica.AddMensaje(MS.Mensaje("No se pudo recuperar: ",0,0 ,True,"Sintactico"))
 
 
     def parse(self,input) :

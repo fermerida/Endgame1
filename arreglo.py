@@ -12,6 +12,9 @@ class Arreglo() :
     def GetValor(self,ts,ms):
             return self.__class__()
 
+    def GetElements(self,ts,ms):
+            return self.values
+
     def Recorrer(self,dic):
         for x in dic:
             if isinstance(x, int):

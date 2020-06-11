@@ -15,11 +15,15 @@ from pygments import lex
 from pygments.lexers import PhpLexer
 from pygments.lexers import PythonLexer
 from pygments.token import Token
+import AST as AR
+from TreeMaker import *
+from scrollimage import ScrollableImage   
 
 class TextLineNumbers(tk.Canvas):
     def __init__(self, *args, **kwargs):
         tk.Canvas.__init__(self, *args, **kwargs)
         self.textwidget = None
+        
 
     def attach(self, text_widget):
         self.textwidget = text_widget
@@ -78,16 +82,22 @@ class Notepad:
                 instrucciones[i].inicializar(ts,ms,instrucciones[i+1])
             else:
                 instrucciones[i].inicializar(ts,ms,None)
+        encontrado = False
         for instr in instrucciones :
             if (instr.id=="main"):
                 instr.ejecutar(ts,ms)
+                encontrado = True
+            if encontrado == False:
+                ms.AddMensaje(MS.Mensaje("Es necesario contener una instrucion main al inicio",0,0,True,"Semantico"))
+
+
 
     def setText(self,text):
         self.ToConsole.delete(1.0,"end")
         self.ToConsole.insert(1.0, text)
 
 
-    def createts(self):
+    def showTS(self):
         newWindow = Tk()
         label = tk.Label(newWindow, text="Tabla de simbolos", font=("Arial",30)).grid(row=0, columnspan=3)
         cols = ('Identificador', 'Rol', 'Tipo','Value')
@@ -115,7 +125,48 @@ class Notepad:
         closeButton = tk.Button(newWindow, text="Close", width=15, command=exit).grid(row=4, column=1)
 
 
+    def showtree(self):
+        newWindow = Tk()
+        label = tk.Label(newWindow, text="Arbol Sintactico", font=("Arial",30))
+        label.pack()
+        screenWidth = newWindow.winfo_screenwidth() 
+        screenHeight = newWindow.winfo_screenheight() 
+        widht = 1400
+        height =800
+        # For left-alling 
+        left = (screenWidth / 2) - (widht / 2)  
+          
+        # For right-allign 
+        top = (screenHeight / 2) - (height /2)  
+          
+        # For top and bottom 
+        newWindow.geometry('%dx%d+%d+%d' % (widht, 
+                                              height, 
+                                              left, top))  
+        img = tk.PhotoImage(master=newWindow, file="Arbol.png")
+        image_window = ScrollableImage(newWindow, image=img, scrollbarwidth=6, 
+                               width=1400, height=800)
+
+        image_window.pack()
+    
+
+    def showTE(self):
+        newWindow = Tk()
+        label = tk.Label(newWindow, text="Tabla de errores", font=("Arial",30)).grid(row=0, columnspan=3)
+        cols = ('Tipo de error', 'Descripcion', 'Linea','Columna')
+        listBox = ttk.Treeview(newWindow, columns=cols, show='headings')
+        for col in cols:
+            listBox.heading(col, text=col)    
+        listBox.grid(row=1, column=0, columnspan=2)
         
+        for mensaje in self.errores:
+            
+            listBox.insert("", "end", values=(str(mensaje.errtype),str(mensaje.text),str(mensaje.linea),str(mensaje.columna)))
+        
+        closeButton = tk.Button(newWindow, text="Close", width=15, command=exit).grid(row=4, column=1)
+
+
+
 
 
 
@@ -139,21 +190,34 @@ class Notepad:
             prints = ms_global.GetMensajes()
             for Mensaje in prints:
                 print(Mensaje.constructMensaje())
-                salida+=Mensaje.constructMensaje()
+                salida+=Mensaje.constructMensaje() + "\n"
+            arparser = AR.AST()
+            raiz = arparser.parse(input)
+            graf = TreeMaker(raiz)
+            try:
+                graf.crearArbol()
+            except:
+                print ("No se genero el arbol")
+            self.ToTS.config(state='normal')
+            self.ToERR.config(state='disabled')
+            
         else:
             print("Se encontraron errores")
             showinfo("Notepad","Se encontraron errores")
-            errores = ms_global.GetErrores()
+            self.errores = ms_global.GetErrores()
             
             '''if (SinLex is not None):
                 for Mensaje in SinLex.mensajes:
                     print(Mensaje.constructError())
                     salida+=Mensaje.constructError()'''
-            for Mensaje in errores:
+            for Mensaje in self.errores:
                 print(Mensaje.constructError())
                 salida+=Mensaje.constructError()
+            self.ToTS.config(state='disabled')
+            self.ToERR.config(state='normal')
+
         self.setText(salida)
-        print(self.ts_global.printts())
+        self.ts_global.printts()
 
 
 
@@ -172,8 +236,10 @@ class Notepad:
         self.on_button_photo = PhotoImage(file="./ico/play4.png")
         self.pic = self.on_button_photo.subsample(10,10)
         self.ToRun = Button(self.Frame1, text = 'Analizar',bd=0, command =self.analizar)
-        self.ToTS = Button(self.Frame1, text = 'Tabla de simbolos', command =self.createts)
-        self.ToAST = Button(self.Frame1, text = 'AST')
+        self.ToTS = Button(self.Frame1, text = 'Tabla de simbolos', command =self.showTS, state='disabled')
+        self.ToAST = Button(self.Frame1, text = 'AST', command =self.showtree)
+        self.ToDES = Button(self.Frame1, text = 'Descendente')
+        self.ToERR = Button(self.Frame1, text = 'ERR',command =self.showTE,state='disabled')
         self.__thisMenuBar = Menu(self.window) 
         self.__thisFileMenu = Menu(self.__thisMenuBar, tearoff=0) 
         self.__thisEditMenu = Menu(self.__thisMenuBar, tearoff=0) 
@@ -183,6 +249,7 @@ class Notepad:
         self.ScrollA = Scrollbar(self.Fright)      
         self.ScrollC = Scrollbar(self.ToConsole)      
         self.__file = None
+        self.errores = None
         set
         # Set icon 
         try: 
@@ -227,9 +294,11 @@ class Notepad:
   
         # Add controls (widget) 
         self.ToRun.config(image = self.pic)
-        self.ToRun.grid(row = 0,column=1,padx = 100)
-        self.ToTS.grid(row = 0,column=0,padx = 100)
-        self.ToAST.grid(row = 0,column=2,padx = 100)
+        self.ToRun.grid(row = 0,column=3)
+        self.ToTS.grid(row = 0,column=1)
+        self.ToAST.grid(row = 0,column=5)
+        self.ToDES.grid(row = 0,column=4,padx = 100)
+        self.ToERR.grid(row = 0,column=2,padx = 100)
         self.ToAnalize.grid(row=1,column=1,sticky = N + E + S + W) 
         self.Frame1.grid(row=0,column=1,sticky = N + E + S + W)
         self.Frame2.grid(row=2,column=1,sticky = N + E + S + W)
@@ -422,8 +491,6 @@ class Notepad:
         self.window.mainloop() 
 
 
-
-  
   
   # Run main application 
 notepad = Notepad(width=800,height=800) 

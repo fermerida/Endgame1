@@ -1,17 +1,13 @@
 
 import ply.lex as lex
 import ply.yacc as yacc
+from NodoAST import *
 
-from expresiones import *
-from instrucciones import *
-from etiquetas import *
-from ts import *
-from arbol import *
-from arreglo import*
 
-class Arbol():
+class AST:
     
-    def __init__(self,ms_gramatica) :
+    def __init__(self) :
+        self.countN = 0
 
    
         
@@ -187,32 +183,55 @@ class Arbol():
 
     def p_INI(self,t) :
         'INI            : LETS'
-        t[0] = t[1]
+        temp = NodoAST("Raiz","Raiz",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        t[0] = temp
 
     def p_LETS_lista(self,t) :
         'LETS    : LETS ET'
-        t[1].append(t[2])
-        t[0] = t[1]
+        temp = NodoAST("ListaEtiquetas","ListaEtiquetas",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(t[2])
+        t[0] = temp
 
 
     def p_LETS_INS(self,t) :
         'LETS    : ET '
-        t[0] = [t[1]]
+        temp = NodoAST("ListaEtiquetas","ListaEtiquetas",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        t[0] = temp
+
 
     def p_ETQ(self,t) :
         '''ET      : ID dosp LINS'''
-        t[0] = Etiqueta(t[1],None, t[3])
+        temp = NodoAST("Etiqueta","Etiqueta",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("ID",t[1],self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        temp.addHijo(t[3])
+        t[0] = temp
+
 
 
     def p_LINS_lista(self,t) :
         'LINS    : LINS INS'
-        t[1].append(t[2])
-        t[0] = t[1]
+        temp = NodoAST("ListInstrucciones","ListInstrucciones",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(t[2])
+        t[0] = temp
 
 
     def p_LINS_INS(self,t) :
         'LINS    : INS '
-        t[0] = [t[1]]
+        temp = NodoAST("ListInstrucciones","ListInstrucciones",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        t[0] = temp
 
     def p_INS(self,t) :
         '''INS      : PRINT
@@ -221,70 +240,113 @@ class Arbol():
                     | SIF
                     | EXIT
                     | UNSET'''
-        t[0] = t[1]
+        temp = NodoAST("Instruccion","Instruccion",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        t[0] = temp
 
     def p_VAR(self,t) :
         'VAR   : dollar ID LCOR'
-        t[0] =Variable(t[2],t[3])
+        temp = NodoAST("Variable","Variable",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("ID",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        temp.addHijo(t[3])
+        t[0] = temp
 
     def p_VARID(self,t) :
         'VAR   : dollar ID '
-        t[0] =Variable(t[2],None)
+        temp = NodoAST("Variable","Variable",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("ID",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        t[0] = temp
 
     def p_LCOR(self,t) :
         'LCOR   : LCOR corcha EXP corchc'
-        t[1].append(t[3])
-        t[0] = t[1]
+        temp = NodoAST("Corchetes","Corchetes",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(t[3])
+        t[0] = temp
 
     def p_LCORC(self,t) :
         'LCOR   : corcha EXP corchc'
-        t[0] = [t[2]]
+        temp = NodoAST("Corchetes","Corchetes",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[2])
+        t[0] = temp
 
     def p_INS_PRINT(self,t) :
         'PRINT     : wprint parea EXP parec ptocoma'
-        t[0] =Print(t[3],t.slice[1].lineno,t.slice[1].lexpos)
+        temp = NodoAST("Print","Print",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[3])
+        t[0] = temp
+
     def p_ASIGNACION(self,t) :
         'ASIGNACION   : VAR igual EXP ptocoma'
-        t[0] =Asignacion(t[1], t[3],t.slice[2].lineno,t.slice[2].lexpos)
+        temp = NodoAST("Asignacion","Asignacion",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(t[3])
+        t[0] = temp
 
     def p_ASIGNACION_REF(self,t) :
-        'ASIGNACION   : VAR igual band dollar ID ptocoma'
-        t[0] =RefAsignacion(t[1], t[5], "Variable")
-
+        'ASIGNACION   : VAR igual band VAR ptocoma'
+        temp = NodoAST("Asignacion","Asignacion Referenciada",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(t[4])
+        t[0] = temp
 
     def p_SALTO(self,t) :
         'SALTO   : wgoto ID ptocoma'
-        t[0] =GoTo(t[2])
+        temp = NodoAST("Salto","Salto",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("ID",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        t[0] = temp
 
     def p_EXIT(self,t) :
         'EXIT   : wexit ptocoma'
-        t[0] =Exit()
+        temp = NodoAST("Exit","Exit",self.countN)
+        self.countN+= 1
+        t[0] = temp
 
     def p_UNSET(self,t) :
         'UNSET   : wunset parea EXP parec ptocoma'
-        t[0] =Unset(t[3],t.slice[1].lineno,t.slice[1].lexpos)
-
-
+        temp = NodoAST("Unset","Unset",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[3])
+        t[0] = temp
 
 
 
     def p_SIF(self,t) :
         'SIF           : wif parea EXP parec SALTO'
-        t[0] =If(t[3], t[5])
-
-
-
+        temp = NodoAST("SIF","Sentencia IF",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[3])
+        temp.addHijo(t[5])
+        t[0] = temp
     def p_expresion_binaria(self,t):
         '''EXP : EXP mas EXP
                 | EXP menos EXP
                 | EXP por EXP
                 | EXP dividido EXP
                 | EXP modulo EXP'''
-        if t[2] == '+'  : t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MAS)
-        elif t[2] == '-': t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MENOS)
-        elif t[2] == '*': t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.POR)
-        elif t[2] == '/': t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.DIVIDIDO)
-        elif t[2] == '%': t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MODULO)
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(temp2)
+        temp.addHijo(t[3])
+        t[0] = temp
 
     def p_EXP_REL(self,t) :
         '''EXP : EXP mayor EXP
@@ -294,26 +356,36 @@ class Arbol():
                 | EXP igualdad EXP
                 | EXP diferente EXP
                 '''
-        if t[2] == '>'    : t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYOR)
-        elif t[2] == '<'  : t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENOR)
-        elif t[2] == '>=' : t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYORIGUAL)
-        elif t[2] == '<=' : t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENORIGUAL)
-        elif t[2] == '==' : t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.IGUAL)
-        elif t[2] == '!=' : t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.DIFERENTE)
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(temp2)
+        temp.addHijo(t[3])
+        t[0] = temp
     def p_EXP_LOG(self,t) :
         '''EXP : EXP land EXP
                 | EXP lor EXP
                 | EXP wxor EXP
                 '''
-        if t[2] == '&&'    : t[0] = Logica(t[1], t[3], OPERACION_LOGICA.AND)
-        elif t[2] == '||'  : t[0] = Logica(t[1], t[3], OPERACION_LOGICA.OR)
-        elif t[2] == 'xor' : t[0] = Logica(t[1], t[3], OPERACION_LOGICA.XOR)
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(temp2)
+        temp.addHijo(t[3])
+        t[0] = temp
     def p_expresion_not(self,t):
         'EXP : lnot EXP'
-        t[0] = Logica(t[2],None,OPERACION_LOGICA.NOT)
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador","Not",self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        temp.addHijo(t[2])
+        t[0] = temp
     def p_EXP_BIT(self,t) :
         '''EXP : EXP band EXP
                 | EXP bor EXP
@@ -321,58 +393,91 @@ class Arbol():
                 | EXP bshiftl EXP
                 | EXP bshiftr EXP
                 '''
-        if t[2] == '&'    : t[0] = Bitwise(t[1], t[3], OPERACION_BITWISE.BITAND)
-        elif t[2] == '|'  : t[0] = Bitwise(t[1], t[3], OPERACION_BITWISE.BITOR)
-        elif t[2] == '^' : t[0] = Bitwise(t[1], t[3], OPERACION_BITWISE.BITXOR)
-        elif t[2] == '<<' : t[0] = Bitwise(t[1], t[3], OPERACION_BITWISE.SHIFTL)
-        elif t[2] == '>>' : t[0] = Bitwise(t[1], t[3], OPERACION_BITWISE.SHIFTR)
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(t[1])
+        temp.addHijo(temp2)
+        temp.addHijo(t[3])
+        t[0] = temp
     def p_expresion_bitnot(self,t):
         'EXP : bnot EXP'
-        t[0] = Bitwise(t[2],None,OPERACION_BITWISE.BITNOT)
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador","Bit Not",self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        temp.addHijo(t[2])
+        t[0] = temp
     def p_expresion_unaria(self,t):
         'EXP : menos EXP %prec Umenos'
-        t[0] = ExpresionNegativo(t[2])
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador","-",self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        temp.addHijo(t[2])
+        t[0] = temp
     def p_expresion_agrupacion(self,t):
         'EXP : parea EXP parec'
-        t[0] = t[2]
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp.addHijo(t[2])
+        t[0] = temp
     def p_expresion_absoluto(self,t):
         'EXP : wabs parea EXP parec'
-        t[0] = ExpresionAbsoluto(t[3])
-
+        temp = NodoAST("Exp","Expresion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("operador","Absoluto",self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        temp.addHijo(t[3])
+        t[0] = temp
     def p_expresion_entero(self,t):
         '''EXP : ENTERO'''
-        t[0] = ExpresionInteger(t[1])
+        temp = NodoAST("Entero",str(t[1]),self.countN)
+        self.countN+= 1
+        t[0] = temp
 
     def p_expresion_float(self,t):
         '''EXP : DECIMAL'''
-        t[0] = ExpresionFloat(t[1])
+        temp = NodoAST("Decimal",t[1],self.countN)
+        self.countN+= 1
+        t[0] = temp
 
     def p_expresion_id(self,t):
-        'EXP   : VAR'
+        'EXP   :    VAR'
+
         t[0] = t[1]
 
     def p_EXP_STR(self,t) :
         'EXP     : CADENA'
-        t[0] = ExpresionDobleComilla(t[1])
+        temp = NodoAST("Cadena",t[1],self.countN)
+        self.countN+= 1
+        t[0] = temp
 
     def p_CONVERTIR(self,t) :
         '''EXP    :  parea wint parec EXP 
                     | parea wfloat parec EXP 
                     | parea wchar parec EXP 
                         '''
-        if t[2] == 'int'  : t[0] = ExpConvertida(t[4], TIPO_DATO.INTEGER)
-        elif t[2] == 'float': t[0] = ExpConvertida(t[4], TIPO_DATO.FLOAT)
-        elif t[2] == 'char': t[0] = ExpConvertida(t[4], TIPO_DATO.CHAR)
+        temp = NodoAST("Conversion","Conversion",self.countN)
+        self.countN+= 1
+        temp2 = NodoAST("ctipo",t[2],self.countN)
+        self.countN+= 1
+        temp.addHijo(temp2)
+        temp.addHijo(t[4])
+        t[0] = temp
+
 
 
 
     def p_EXP_ARR(self,t) :
         'EXP     : warray parea parec '
-        t[0] = Arreglo()
+        temp = NodoAST("Array","New Array",self.countN)
+        self.countN+= 1
+        t[0] = temp
 
 
     def p_error(self,t):

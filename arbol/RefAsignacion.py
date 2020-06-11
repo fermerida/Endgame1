@@ -1,5 +1,7 @@
 from instrucciones import Instruccion
 import ts as TS
+import mensajes as MS
+
 class RefAsignacion(Instruccion) :
     '''
         Esta clase representa la instrucción de asignación de variables
