@@ -1,0 +1,24 @@
+main:
+$a = -14; 
+$b[1][2] = 3; 
+$b[1][1] = 3; 
+print($b);
+$u = 3; 
+$f = (char)$u; 
+print($f);
+$e = (char)$b; 
+print($e);
+$c= array();
+$c[1][1] = 10;
+$d['hey']= 'another';
+$g[1]='hola';
+print($g);
+print($g[1][0][3]);
+goto gaol;
+
+printing:
+print($e);
+print($c[1][1]);
+
+gaol:
+exit;

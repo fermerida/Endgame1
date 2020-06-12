@@ -35,8 +35,15 @@ class Asignacion(Instruccion) :
         for Exp in list:
             result.append(Exp.GetValor(ts,ms))
            
+        return result
+    
+    def CheckInt(self,list, ts,ms):
+        isint = True
+        for Exp in list:
+            if Exp.GetTipo(ts,ms) != TS.TIPO_DATO.INTEGER:
+                isint=False
+        return isint
         
-            return result
        
     def DefineRol(self,id):
         var = id[0]
@@ -80,6 +87,7 @@ class Asignacion(Instruccion) :
                     ts.actualizar(refsymbol)
 
             else:
+               
                 if tipo_et == "Parametro":
                     self.etiqueta.rol = "Metodo"
                 elif tipo_et =="Retorno de valor":
@@ -88,17 +96,22 @@ class Asignacion(Instruccion) :
                 ts.agregar(simbolo)
         else:
             if sym is not None:
-                array = sym.valor
-                arreglo=array.values
+                if (sym.tipo == TS.TIPO_DATO.ARRAY) or (sym.tipo == TS.TIPO_DATO.STRUCT):
+                    array = sym.valor
+                    arreglo=array.values
+                else:
+                    print("Este temporal ya contiene un dato")
+                    return None
             else:
                 array = Arreglo()
                 arreglo = array.values
             accesos = self.CheckA(self.var.accesos,ts,ms)
-            value = arreglo
-            level=value
+            isint = self.CheckInt(self.var.accesos,ts,ms)
+            level=arreglo
             for i in range(len(accesos)):
+                #print("lenght: "+str(len(accesos)))
                 if i==(len(accesos))-1:
-                    print("fin"+str(i)+str(accesos[i])+str(val)+str(level))
+                    #print("fin"+str(i)+str(accesos[i])+str(val)+str(level))
                     #guardar valor
                     level[accesos[i]] = val
                 else:
@@ -107,8 +120,27 @@ class Asignacion(Instruccion) :
                             #agregar a elemento
                             #print("is instance")
                             level = level[accesos[i]]
+                        elif isinstance(level[accesos[i]],str):
+                                    if i + 2== len(accesos):
+                                        if isinstance(accesos[i+1],int):
+                                            if accesos[i+1] < len(level[accesos[i]]):
+                                                #print("una cadenita:"+str(i))
+                                                level[accesos[i]] = level[accesos[i]][:accesos[i+1]] + str(val) + level[accesos[i]][accesos[i+1]+1:] 
+                                                break
+                                            else:
+                                                r = len(level[accesos[i]])
+                                                adding = ""
+                                                while r < accesos[i+1]:
+                                                    adding = adding + " "
+                                                    r+=1
+                                                adding += str(val)
+                                                level[accesos[i]] = level[accesos[i]] + adding
+                                        else:
+                                            print("Solo se puede acceder con un numero a una cadena")
+                                    else:
+                                        print("EError no se puede acceder a este tipo de elemento")
+                                
                         else:
-                            #error no se puede acceder a este tipo de elemento
                             ms.AddMensaje(MS.Mensaje("No se puede acceder a este tipo de elemento",self.linea,self.columna,True,"Semantico"))
                             print("error no se puede acceder a este tipo de elemento")
                             break       
@@ -121,13 +153,15 @@ class Asignacion(Instruccion) :
                 rol = "Arreglo"
             else:
                 rol = "Struct"
-            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), value,rol)
+            #print("es este:"+str(array.values)+" from: "+self.var.id)
+
+            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,rol)
 
             if sym is not None:
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    reference = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), value,"Arreglo")
+                    reference = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,"Arreglo")
                     ts.actualizar(refsymbol)
             
             else:

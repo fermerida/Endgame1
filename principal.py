@@ -2,7 +2,6 @@ import gramatica as GR
 import ts as TS
 import mensajes as MS
 from instrucciones import *
-from arbol import *
 from etiquetas import *
 import AST as AR
 from TreeMaker import *
@@ -23,12 +22,15 @@ def procesar_instrucciones(instrucciones, ts,ms) :
 correct = False
 f = open("./entrada.txt", "r")
 input = f.read()
+input += " \n exit;"
 
 print("Iniciando analisis")
 
 ms_global = MS.Mensajes()
 parser = GR.Gramatica(ms_global)
 instrucciones = parser.parse(input)
+print("Termina analisis")
+
 #SinLex = parser.Errors()
 
 ts_global = TS.TablaDeSimbolos()
@@ -42,13 +44,7 @@ if (ms_global.correcto):
     prints = ms_global.GetMensajes()
     for Mensaje in prints:
         print(Mensaje.constructMensaje())
-    arparser = AR.AST()
-    raiz = arparser.parse(input)
-    graf = TreeMaker(raiz)
-    try:
-        graf.crearArbol()
-    except:
-        print ("No se genero el arbol")
+   
 else:
     print("Se encontraron errores")
     errores = ms_global.GetErrores()

@@ -1,12 +1,16 @@
 
 import ply.lex as lex
 import ply.yacc as yacc
-
+from Print import *
+from Unset import *
+from Asignacion import *
+from Exit import *
+from GoTo import *
+from If import *
 from expresiones import *
 from instrucciones import *
 from etiquetas import *
 from ts import *
-from arbol import *
 from arreglo import*
 
 class Gramatica():
@@ -63,6 +67,7 @@ class Gramatica():
         'DECIMAL',
         'ENTERO',
         'CADENA',
+        'CHAR',
         'ID'
     ] + list(reservadas.values())
 
@@ -120,6 +125,11 @@ class Gramatica():
         return t
 
     def t_CADENA(self,t):
+        r'\".*?\"'
+        t.value = t.value[1:-1] # remuevo las comillas
+        return t 
+
+    def t_CHAR(self,t):
         r'\'.*?\''
         t.value = t.value[1:-1] # remuevo las comillas
         return t 
@@ -347,6 +357,10 @@ class Gramatica():
 
     def p_EXP_STR(self,t) :
         'EXP     : CADENA'
+        t[0] = ExpresionDobleComilla(t[1])
+
+    def p_EXP_CHAR(self,t) :
+        'EXP     : CHAR'
         t[0] = ExpresionDobleComilla(t[1])
 
     def p_CONVERTIR(self,t) :

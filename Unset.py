@@ -1,6 +1,6 @@
 from instrucciones import Instruccion
-from expresiones import *
 import mensajes as MS
+from expresiones import *
 
 class Unset(Instruccion) :
     '''
@@ -13,9 +13,9 @@ class Unset(Instruccion) :
         self.linea = linea
         self.columna = columna
 
-    def ejecutar(self, ts):
-        if ( isinstance(self.var,ExpresionIdentificador)) or ( isinstance(self.var,ExpresionDobleComilla)):
-            key = self.var.GetName(ts)
+    def ejecutar(self, ts,ms):
+        if ( isinstance(self.var,Variable)) or ( isinstance(self.var,ExpresionDobleComilla)):
+            key = self.var.GetName(ts,ms)
             #print("unsetting" + key)
             ts.eliminar(key)
         else:

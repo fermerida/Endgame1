@@ -1,5 +1,5 @@
 from instrucciones import Instruccion
-from arreglo import *
+from arreglo import Arreglo
 import mensajes as MS
 class Print(Instruccion) :
     '''
@@ -15,12 +15,12 @@ class Print(Instruccion) :
     def ejecutar(self, ts,ms):
         valor = self.cad.GetValor(ts,ms)
         if isinstance(valor,Arreglo):
-            print("si es")
             valor = valor.GetElements(ts,ms)
+            #print("si es"+str(valor))
 
         if (valor != None):
-            ms.AddMensaje(MS.Mensaje(self.cad.GetValor(ts,ms),self.linea,self.columna,False,None))
-            #print(self.cad.GetValor(ts,ms))
+            formatted = str(valor).replace('\\n','\n')
+            ms.AddMensaje(MS.Mensaje(formatted,self.linea,self.columna,False,None))
             #print(ts.printts())
         else:
             #print("Error: Variable a imprimir no tiene valor")

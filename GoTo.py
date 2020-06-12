@@ -1,5 +1,5 @@
-from instrucciones import Instruccion
-from etiquetas import Etiqueta
+from instrucciones import *
+from etiquetas import *
 import mensajes as MS
 
 class GoTo(Instruccion) :
@@ -20,6 +20,8 @@ class GoTo(Instruccion) :
         et = Simbolo.valor
         if  isinstance(et, Etiqueta):
             for instr in et.instrucciones :
+                if isinstance(instr,Asignacion):
+                    instr.etiqueta = et
                 result = instr.ejecutar(ts,ms)
                 if result == False:
                     break

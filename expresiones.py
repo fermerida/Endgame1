@@ -57,10 +57,10 @@ class Aritmetica(Exp) :
             return TS.TIPO_DATO.INTEGER
 
     def GetValor(self,ts,ms):
-        exp1 = self.exp1.GetValor(ts)
-        exp2 = self.exp2.GetValor(ts)
-        tipo1 = self.exp1.GetTipo(ts)
-        tipo2 = self.exp2.GetTipo(ts)
+        exp1 = self.exp1.GetValor(ts,ms)
+        exp2 = self.exp2.GetValor(ts,ms)
+        tipo1 = self.exp1.GetTipo(ts,ms)
+        tipo2 = self.exp2.GetTipo(ts,ms)
 
         maxi = self.MaxType(tipo1,tipo2)
 
@@ -75,8 +75,8 @@ class Aritmetica(Exp) :
 
 
     def GetTipo(self,ts,ms):
-        tipo1 = self.exp1.GetTipo(ts)
-        tipo2 = self.exp2.GetTipo(ts)
+        tipo1 = self.exp1.GetTipo(ts,ms)
+        tipo2 = self.exp2.GetTipo(ts,ms)
         return self.MaxType(tipo1,tipo2)
 
 
@@ -104,11 +104,11 @@ class ExpresionAbsoluto(Exp) :
         self.exp = exp
 
     def GetValor(self,ts,ms):
-        exp = self.exp.GetValor(ts)
+        exp = self.exp.GetValor(ts,ms)
         return abs(exp)
 
     def GetTipo(self,ts,ms):
-        return self.exp.GetTipo(ts)
+        return self.exp.GetTipo(ts,ms)
 
 class ExpresionInteger(Exp) :
     '''
@@ -130,12 +130,12 @@ class RandomList(Exp) :
         Esta clase representa una expresión numérica entera o decimal.
     '''
 
-    def __init__(self, val = 0) :
-        self.val = val
+    def __init__(self, values) :
+        self.values = values
 
 
     def GetValor(self,ts,ms):
-        return self.val; 
+        return self.__class__(self.values) 
 
     def GetTipo(self,ts,ms):
         return TS.TIPO_DATO.ARRAY
@@ -166,18 +166,20 @@ class Variable(Exp) :
     def GetName(self,ts,ms):
         return self.id
     
+    def GetAccesos(self,list, ts,ms):
+        expes = []
+        for Exp in list:
+            expes.append(Exp.GetValor(ts,ms))
+        return expes
+
     def CheckInt(self,list, ts,ms):
         isint = True
-        intes = []
         for Exp in list:
-            if Exp.GetTipo(ts,ms) == TS.TIPO_DATO.INTEGER:
-                intes.append(Exp.GetValor(ts,ms))
-            else:
+            if Exp.GetTipo(ts,ms) != TS.TIPO_DATO.INTEGER:
                 isint=False
-        if isint == True:
-            return intes
-        else:
-            None
+        return isint
+        
+
 
     def GetValor(self,ts,ms):
         sym = ts.obtener(self.id)
@@ -191,33 +193,63 @@ class Variable(Exp) :
                     if referencia != None:
                         return referencia.valor
             else:
-                arreglo = sym.valor
-                accesos = self.CheckInt(self.accesos,ts,ms)
+                accesos = self.GetAccesos(self.accesos,ts,ms)
+                isint = self.CheckInt(self.accesos,ts,ms)
                 if (accesos is None):
+                    print("Error obteniendo los accesos")
                     return None
-                value = arreglo
-                level=value
-                for i in range(len(accesos)):
-                    if i==(len(accesos))-1:
-                        #print("fin"+str(i))
-                        #obtiene valor
-                        if accesos[i] in level:
-                            value= level[accesos[i]] 
-                        else:
-                            print("Error acceso a esta posicion esta vacio")
-                    else:
-                        if accesos[i] in level:
-                            if type(level[accesos[i]]) is dict:
-                                #agregar a elemento
-                                level = level[accesos[i]]
+                if (sym.tipo== TS.TIPO_DATO.ARRAY) or (sym.tipo == TS.TIPO_DATO.STRUCT):
+                    arreglo = sym.valor
+                    
+                    value = arreglo
+                    level=arreglo.values
+                    #print("levels: "+str(level)+" from:"+ self.id)
+                    for i in range(len(accesos)):
+                        if i==(len(accesos))-1:
+                            #print("fin"+str(i))
+                            #obtiene valor
+                            if accesos[i] in level:
+                                value= level[accesos[i]] 
                             else:
-                                #error no se puede acceder a este tipo de elemento
-                                print("Error no se puede acceder a este tipo de elemento")
-                                break       
+                                print("Error acceso a esta posicion esta vacios")
                         else:
-                            print("Error acceso a esta posicion esta vacio")
-                            break   
-                return value
+                            if accesos[i] in level:
+                                if isinstance(level[accesos[i]],dict):
+                                    #agregar a elemento
+                                    level = level[accesos[i]]
+                                elif isinstance(level[accesos[i]],str):
+                                    if i + 2== len(accesos):
+                                        if isint:
+                                            if accesos[i+1] < len(level[accesos[i]]):
+                                                #print("una cadenita:"+str(i))
+                                                return level[accesos[i]][accesos[i+1]]
+                                            else:
+                                                print("Posicion mayor a cadena")
+                                        else:
+                                            print("Solo se puede acceder con un numero a una cadena")
+                                    else:
+                                        print("EError no se puede acceder a este tipo de elemento")
+                                else:
+                                    #error no se puede acceder a este tipo de elemento
+                                    print("Error no se puede acceder a este tipo de elemento")
+                                    break       
+                            else:
+                                print("Error acceso a esta posicion esta vacio")
+                                break   
+                    return value
+                elif sym.tipo == TS.TIPO_DATO.CHAR:
+                    if len(accesos)==1:
+                        if isint:
+                            if accesos[0] < len(sym.valor):
+                                return sym.valor[accesos[0]]
+                            else:
+                                print("Posicion mayor a cadena")
+                        else:
+                            print("Solo se puede acceder con un numero a una cadena") 
+                    else:
+                        print("No se puede acceder multiples veces a una cadena")
+                else:
+                    print("No se puede aceeder a una variable con este tipo")
         print("No existe esta variable")
         return None
 
@@ -260,7 +292,7 @@ class ExpresionCadenaNumerico(Exp) :
         self.exp = exp
 
     def GetValor(self,ts,ms):
-        return str(self.exp.GetValor(ts))
+        return str(self.exp.GetValor(ts,ms))
 
 class Relacional() :
     '''
@@ -274,8 +306,8 @@ class Relacional() :
         self.operador = operador
     
     def GetValor(self,ts,ms):
-        exp1 = self.exp1.GetValor(ts)
-        exp2 = self.exp2.GetValor(ts)
+        exp1 = self.exp1.GetValor(ts,ms)
+        exp2 = self.exp2.GetValor(ts,ms)
         if self.operador == OPERACION_RELACIONAL.MAYOR : return exp1 > exp2
         if self.operador == OPERACION_RELACIONAL.MENOR : return exp1 < exp2
         if self.operador == OPERACION_RELACIONAL.MAYORIGUAL : return exp1 >= exp2
@@ -298,9 +330,9 @@ class Logica() :
         self.operador = operador
     
     def GetValor(self,ts,ms):
-        exp1 = self.exp1.GetValor(ts)
+        exp1 = self.exp1.GetValor(ts,ms)
         if (self.exp2 != None):
-            exp2 = self.exp2.GetValor(ts)
+            exp2 = self.exp2.GetValor(ts,ms)
         if self.operador == OPERACION_LOGICA.NOT : return not(exp1)
         if self.operador == OPERACION_LOGICA.AND : return exp1 and exp2
         if self.operador == OPERACION_LOGICA.OR : return exp1 or exp2
@@ -322,9 +354,9 @@ class Bitwise() :
         self.operador = operador
     
     def GetValor(self,ts,ms):
-        exp1 = self.exp1.GetValor(ts)
+        exp1 = self.exp1.GetValor(ts,ms)
         if (self.exp2 !=None):
-            exp2 = self.exp2.GetValor(ts)
+            exp2 = self.exp2.GetValor(ts,ms)
         if self.operador == OPERACION_BITWISE.BITNOT : return ~(exp1)
         if self.operador == OPERACION_BITWISE.BITAND : return exp1 & exp2
         if self.operador == OPERACION_BITWISE.BITOR : return exp1 | exp2
@@ -362,7 +394,7 @@ class ExpConvertida(Exp) :
                 fletter = exvalor[0]
                 return ord(fletter)
             elif (extipo == TS.TIPO_DATO.ARRAY):
-                fletter = self.GetFirst(exvalor)
+                fletter = self.GetFirst(exvalor.values)
                 return ExpConvertida(fletter,self.tipo,self.linea,self.columna).GetValor(ts,ms)
             else:
                 ms.AddMensaje(MS.Mensaje("No se puede convertir a tipo",self.linea,self.columna,True,"Semantico"))
@@ -376,8 +408,8 @@ class ExpConvertida(Exp) :
                 fletter = exvalor[0]
                 return float(ord(fletter))
             elif (extipo == TS.TIPO_DATO.ARRAY):
-                fletter = self.GetFirst(exvalor)
-                return fletter
+                fletter = self.GetFirst(exvalor.values)
+                return ExpConvertida(fletter,self.tipo,self.linea,self.columna).GetValor(ts,ms)
             else:
                 ms.AddMensaje(MS.Mensaje("No se puede convertir a tipo",self.linea,self.columna,True,"Semantico"))
                 return None
@@ -399,8 +431,8 @@ class ExpConvertida(Exp) :
                 fletter = exvalor[0]
                 return ord(fletter)
             elif (extipo == TS.TIPO_DATO.ARRAY):
-                fletter = self.GetFirst(exvalor)
-                return fletter
+                fletter = self.GetFirst(exvalor.values)
+                return ExpConvertida(fletter,self.tipo,self.linea,self.columna).GetValor(ts,ms)
             else:
                 ms.AddMensaje(MS.Mensaje("No se puede convertir a tipo",self.linea,self.columna,True,"Semantico"))
                 return None

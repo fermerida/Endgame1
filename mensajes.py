@@ -1,5 +1,4 @@
 from instrucciones import Instruccion
-from arbol import *
 class Mensaje() :
     'Esta clase representa un simbolo dentro de nuestra tabla de simbolos'
 

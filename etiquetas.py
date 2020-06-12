@@ -1,5 +1,5 @@
 from instrucciones import Instruccion
-from arbol import *
+from Asignacion import *
 import ts as TS
 class Etiqueta() :
     'Esta clase representa un simbolo dentro de nuestra tabla de simbolos'
@@ -15,7 +15,8 @@ class Etiqueta() :
     def ejecutar(self, ts,ms):
         result = None
         for instr in self.instrucciones :
-            instr.etiqueta = self
+            if isinstance(instr,Asignacion):
+                instr.etiqueta = self
             result = instr.ejecutar(ts,ms)
             if result == False:
                # print("iHere")

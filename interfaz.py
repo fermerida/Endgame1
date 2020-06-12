@@ -8,7 +8,6 @@ import gramatica as GR
 import ts as TS
 import mensajes as MS
 from instrucciones import *
-from arbol import *
 from etiquetas import *
 from pygments import highlight
 from pygments import lex
@@ -89,7 +88,8 @@ class Notepad:
                 encontrado = True
             if encontrado == False:
                 ms.AddMensaje(MS.Mensaje("Es necesario contener una instrucion main al inicio",0,0,True,"Semantico"))
-
+        for instr in instrucciones:
+            instr.actualizar(ts)
 
 
     def setText(self,text):
@@ -176,6 +176,7 @@ class Notepad:
         ms_global = MS.Mensajes()
         parser = GR.Gramatica(ms_global)
         input = self.ToAnalize.get("1.0",'end-1c')
+        input += " \n exit;"
         instrucciones = parser.parse(input)
         #SinLex = parser.Errors()
 
@@ -190,7 +191,7 @@ class Notepad:
             prints = ms_global.GetMensajes()
             for Mensaje in prints:
                 print(Mensaje.constructMensaje())
-                salida+=Mensaje.constructMensaje() + "\n"
+                salida+=Mensaje.constructMensaje() 
             arparser = AR.AST()
             raiz = arparser.parse(input)
             graf = TreeMaker(raiz)

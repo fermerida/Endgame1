@@ -58,6 +58,7 @@ class AST:
         'DECIMAL',
         'ENTERO',
         'CADENA',
+        'CHAR',
         'ID'
     ] + list(reservadas.values())
 
@@ -115,9 +116,14 @@ class AST:
         return t
 
     def t_CADENA(self,t):
-        r'\'.*?\''
+        r'\".*?\"'
         t.value = t.value[1:-1] # remuevo las comillas
         return t 
+
+    def t_CHAR(self,t):
+        r'\'.*?\''
+        t.value = t.value[1:-1] # remuevo las comillas
+        return t  
 
     # Comentario de múltiples líneas /* .. */
     def t_COMENTARIO_MULTILINEA(self,t):
@@ -138,8 +144,6 @@ class AST:
         
     def t_error(self,t):
         print("Illegal character '%s'" % t.value[0])
-        self.ms_gramatica.AddMensaje(MS.Mensaje("Caracter no encontrado: "+str(t.value[0]),t.lineno,t.lexpos,True,"Lexico"))
-
         t.lexer.skip(1)
 
     # Construyendo el analizador léxico
@@ -456,6 +460,12 @@ class AST:
         temp = NodoAST("Cadena",t[1],self.countN)
         self.countN+= 1
         t[0] = temp
+    
+    def p_EXP_CHAR(self,t) :
+        'EXP     : CHAR'
+        temp = NodoAST("Char",t[1],self.countN)
+        self.countN+= 1
+        t[0] = temp
 
     def p_CONVERTIR(self,t) :
         '''EXP    :  parea wint parec EXP 
@@ -482,8 +492,7 @@ class AST:
 
     def p_error(self,t):
         t.value
-        self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(t.value),t.lineno,t.lexpos ,True,"Sintactico"))
-        print("Error sintáctico en '%s'" % t.value)
+        print("Error sintáctico en '%s'" % t.value + "linea: "+str(t.lineno))
 
 
     def parse(self,input) :

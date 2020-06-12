@@ -1,0 +1,18 @@
+<?php
+main:
+	$serie=10;
+	$num1 = 0;
+	$num2 = 1;
+	$suma = 1;
+	$i = 1;
+	print($num1);
+	
+	fibonacci:
+	if($i>$serie) goto fin:
+		$suma = $num1 + $num2;
+		$num1 = $num2;
+		n$um2 = $suma;
+		$i = $i+1;
+		
+fin:
+exit;		
