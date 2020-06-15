@@ -42,11 +42,11 @@ main:
   print("\n");
   print($t3[1]);
   print("\n");
-  $t3[1][0] = 10;  # esto debe dar un error el indice esta ocupado
+  #$t3[1][0] = 10;  # esto debe dar un error el indice esta ocupado
   $t3[2][0] = 20;
   print($t3[2][0]);
   print("\n");
-  print($t3[1][3]); #error esta vacio el indice
+  #print($t3[1][3]); #error esta vacio el indice
   $t3["nombre"]="Carla";
   print($t3["nombre"]);
   print("\n");

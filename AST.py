@@ -489,6 +489,11 @@ class AST:
         self.countN+= 1
         t[0] = temp
 
+    def p_EXP_READ(self,t) :
+        'EXP     : wread parea parec '
+        temp = NodoAST("Read","Read Data",countN)
+        countN+= 1
+        t[0] = temp
 
     def p_error(self,t):
         t.value

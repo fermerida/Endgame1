@@ -13,6 +13,7 @@ class Print(Instruccion) :
         self.columna =columna
 
     def ejecutar(self, ts,ms):
+        print("here")
         valor = self.cad.GetValor(ts,ms)
         if isinstance(valor,Arreglo):
             valor = valor.GetElements(ts,ms)
@@ -21,6 +22,7 @@ class Print(Instruccion) :
         if (valor != None):
             formatted = str(valor).replace('\\n','\n')
             ms.AddMensaje(MS.Mensaje(formatted,self.linea,self.columna,False,None))
+            print(formatted)
             #print(ts.printts())
         else:
             #print("Error: Variable a imprimir no tiene valor")

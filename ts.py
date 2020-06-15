@@ -12,12 +12,15 @@ class TIPO_DATO(Enum) :
 class Simbolo() :
     'Esta clase representa un simbolo dentro de nuestra tabla de simbolos'
 
-    def __init__(self, id, tipo, valor,rol) :
+    def __init__(self, id, tipo, valor,rol,dim,ambito,declarada) :
         self.id = id
         self.tipo = tipo
         self.valor = valor
         self.rol = rol
         self.reference = None
+        self.dim= dim
+        self.ambito = ambito
+        self.declarada = declarada
 
     def SetReference(self, id):
         self.reference = id
@@ -25,8 +28,11 @@ class Simbolo() :
 class TablaDeSimbolos() :
     'Esta clase representa la tabla de simbolos'
 
-    def __init__(self, simbolos = {}) :
-        self.simbolos = simbolos
+    def __init__(self, simbolos = None) :
+        if simbolos is None:
+            self.simbolos = {}
+        else:
+            self.simbolos = simbolos
 
     def agregar(self, simbolo) :
         self.simbolos[simbolo.id] = simbolo

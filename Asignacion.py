@@ -2,6 +2,7 @@ from instrucciones import Instruccion
 import ts as TS
 from arreglo import *
 import mensajes as MS
+import globalvar as GLO
 
 from enum import Enum
 
@@ -27,6 +28,8 @@ class Asignacion(Instruccion) :
         self.linea = linea
         self.columna = columna
         self.etiqueta = None
+        GLO.pila +=1
+        self.pila = GLO.pila
 
     
     def CheckA(self,list, ts,ms):
@@ -43,7 +46,13 @@ class Asignacion(Instruccion) :
             if Exp.GetTipo(ts,ms) != TS.TIPO_DATO.INTEGER:
                 isint=False
         return isint
-        
+
+    def Declaradaen(self):
+        declarada = {}
+        declarada["linea"] = str(self.linea)    
+        declarada["columna"] = str(self.columna)    
+        declarada["pila"] = str(self.pila)  
+        return declarada  
        
     def DefineRol(self,id):
         var = id[0]
@@ -76,14 +85,16 @@ class Asignacion(Instruccion) :
         sym = ts.obtener(self.var.id)
         val = self.valor.GetValor(ts,ms)
         tipo_et=self.DefineRol(self.var.id)
+        declarada = self.Declaradaen()
+        
         #print("id: "+str(self.var.id)+" accesos:"+str(self.var.accesos))
         if self.var.accesos == None:
             if sym is not None:
-                simbolo = TS.Simbolo(self.var.id, self.valor.GetTipo(ts,ms), val,tipo_et)
+                simbolo = TS.Simbolo(self.var.id, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    refsymbol = TS.Simbolo(sym.reference, self.valor.GetTipo(ts,ms), val,tipo_et)
+                    refsymbol = TS.Simbolo(sym.reference, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
                     ts.actualizar(refsymbol)
 
             else:
@@ -92,7 +103,7 @@ class Asignacion(Instruccion) :
                     self.etiqueta.rol = "Metodo"
                 elif tipo_et =="Retorno de valor":
                     self.etiqueta.rol = "Funcion"
-                simbolo = TS.Simbolo(self.var.id, self.valor.GetTipo(ts,ms), val,tipo_et)    
+                simbolo = TS.Simbolo(self.var.id, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)    
                 ts.agregar(simbolo)
         else:
             if sym is not None:
@@ -155,13 +166,13 @@ class Asignacion(Instruccion) :
                 rol = "Struct"
             #print("es este:"+str(array.values)+" from: "+self.var.id)
 
-            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,rol)
+            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,rol,len(array.values),self.etiqueta.id,declarada)
 
             if sym is not None:
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    reference = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,"Arreglo")
+                    reference = TS.Simbolo(sym.reference, array.GetTipo(ts,ms), array,rol,len(array.values),self.etiqueta.id,declarada)
                     ts.actualizar(refsymbol)
             
             else:

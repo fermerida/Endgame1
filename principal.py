@@ -1,6 +1,6 @@
 import gramatica as GR
 import ts as TS
-import mensajes as MS
+import globalvar as GLO
 from instrucciones import *
 from etiquetas import *
 import AST as AR

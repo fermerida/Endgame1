@@ -1,0 +1,28 @@
+main: 
+#agenda
+    $t1[0]['nombre']="Daniel";
+    $t1[0]['direccion']="zona 4";
+    $t1[0]['telefono'][0]=4524344;
+    $t1[0]['telefono'][1]=2444244;
+    $t1[0]['nombre']="Hugo";
+    $t1[0]['direccion']="zona 8";
+    $t1[0]['telefono'][0]=3314444;
+    $t1[0]['nombre']="Manuel";
+    $t1[0]['direccion']="zona 11";
+    $t1[0]['telefono'][0]=3334444;
+    $t1[0]['telefono'][1]=5858585;
+
+    #imprime nombres del struct
+    $t2=0;
+while0:
+    if($t2>2) goto end0;
+    print($t1[$t2]["nombre"]);
+    print("\n");
+    $t2 = $t2 + 1;
+    goto while0;
+end0:
+    
+
+
+    
+   

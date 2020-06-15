@@ -21,4 +21,32 @@ print($e);
 print($c[1][1]);
 
 gaol:
+$t3 = 1;
+$t4 = 1;
+$t5 = 3;
+if($t3 == $t4 || $t5<$t4)goto exi;
+exi:
 exit;
+
+
+
+
+main: 
+#agenda
+    $t1=1;
+    print($t1);
+    $t2=2;
+    print($t2);
+    $t3=3;
+    print($t3);
+    goto ex;
+
+    $t4=4;
+    print($t4);
+    $t5=5;
+    print($t5);
+    ex:
+     $t6=6;
+    print($t6);
+    $t7=7;
+    print($t7);

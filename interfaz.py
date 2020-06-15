@@ -6,18 +6,23 @@ from tkinter.filedialog import *
 from tkinter import ttk
 import gramatica as GR
 import ts as TS
+from GoTo import *
+from Asignacion import *
 import mensajes as MS
+import globalvar as GLO
 from instrucciones import *
 from etiquetas import *
+from arreglo import *
 from pygments import highlight
 from pygments import lex
 from pygments.lexers import PhpLexer
 from pygments.lexers import PythonLexer
 from pygments.token import Token
 import AST as AR
+import ASTDES as ARDES
 from TreeMaker import *
 from scrollimage import ScrollableImage   
-
+import sys
 class TextLineNumbers(tk.Canvas):
     def __init__(self, *args, **kwargs):
         tk.Canvas.__init__(self, *args, **kwargs)
@@ -72,8 +77,8 @@ class CustomText(tk.Text):
         return result        
 
 class Notepad: 
-    ts_global = TS.TablaDeSimbolos()
-
+    ts_global = None
+    ms_global = None
     def procesar_instrucciones(self,instrucciones, ts,ms) :
     ## lista de instrucciones recolectadas
         for i in range(len(instrucciones)) :
@@ -86,25 +91,66 @@ class Notepad:
             if (instr.id=="main"):
                 instr.ejecutar(ts,ms)
                 encontrado = True
-            if encontrado == False:
-                ms.AddMensaje(MS.Mensaje("Es necesario contener una instrucion main al inicio",0,0,True,"Semantico"))
+                break
+        if encontrado == False:
+            ms.AddMensaje(MS.Mensaje("Es necesario contener una instrucion main al inicio",0,0,True,"Semantico"))
         for instr in instrucciones:
             instr.actualizar(ts)
 
+    def debug_instrucciones(self,instrucciones, ts,ms) :
+    ## lista de instrucciones recolectadas
+        for i in range(len(instrucciones)) :
+            if i < len(instrucciones)-1:
+                instrucciones[i].inicializar(ts,ms,instrucciones[i+1])
+            else:
+                instrucciones[i].inicializar(ts,ms,None)
+        encontrado = False
+        for instr in instrucciones :
+            if (instr.id=="main"):
+                #instr.debug(ts,ms)
+                GLO.pila_action = instr.instrucciones
+                GLO.current_etiqueta = instr
+                encontrado = True
+                break
+        if encontrado == False:
+            ms.AddMensaje(MS.Mensaje("Es necesario contener una instrucion main al inicio",0,0,True,"Semantico"))
+        for instr in instrucciones:
+            instr.actualizar(ts)
 
     def setText(self,text):
         self.ToConsole.delete(1.0,"end")
         self.ToConsole.insert(1.0, text)
 
+    def enterPressed(self,event=None):
+        text = self.ToConsole.get("1.0",'end-1c')
+        lines = text.split("\n")
+        last_line = lines[-1]
+        GLO.readinput = last_line
+        showinfo("Notepad",GLO.readinput)
+    
+    def GetRead(self):
+        return self.readinput
+
 
     def showTS(self):
+        def close_window(): 
+            newWindow.destroy()
         newWindow = Tk()
+        widht = 1400
+        height =750
+        # For top and bottom 
+        newWindow.geometry('%dx%d' % (widht, 
+                                              height))
         label = tk.Label(newWindow, text="Tabla de simbolos", font=("Arial",30)).grid(row=0, columnspan=3)
-        cols = ('Identificador', 'Rol', 'Tipo','Value')
-        listBox = ttk.Treeview(newWindow, columns=cols, show='headings')
+        cols = ('Identificador', 'Rol', 'Tipo','Dimensiones','Value','Declarada en', 'Referencias')
+        f1 = tk.Frame(newWindow)
+        f1.grid(column=0, row=1,columnspan=2, sticky="ns")
+        newWindow.rowconfigure(1, weight=1)
+        listBox = ttk.Treeview(f1, columns=cols, show='headings')
         for col in cols:
-            listBox.heading(col, text=col)    
-        listBox.grid(row=1, column=0, columnspan=2)
+            listBox.heading(col, text=col)  
+            listBox.column(col, width=200,anchor="center") 
+        listBox.pack(expand=True, fill='y')
         
         for i in self.ts_global.simbolos:
             if self.ts_global.simbolos[i].tipo == TS.TIPO_DATO.INTEGER:
@@ -119,13 +165,21 @@ class Notepad:
                 tipo = "Flotante"
             else:
                 tipo = self.ts_global.simbolos[i].tipo
+            if isinstance(self.ts_global.simbolos[i].valor,Etiqueta):
+                vla = "Etiqueta"
+            elif isinstance(self.ts_global.simbolos[i].valor,Arreglo):
+                vla =self.ts_global.simbolos[i].valor.values
+            else:
+                vla =str(self.ts_global.simbolos[i].valor)
+            listBox.insert("", "end", values=(str(self.ts_global.simbolos[i].id),str(self.ts_global.simbolos[i].rol),str(tipo),str(self.ts_global.simbolos[i].dim),vla,self.ts_global.simbolos[i].ambito,self.ts_global.simbolos[i].declarada))
+            
+        closeButton = tk.Button(newWindow, text="Close", width=15, command=close_window).grid(row=4, column=1)
+        closeButton = tk.Button(newWindow, text="Exit", width=15, command=exit).grid(row=4, column=0)
 
-            listBox.insert("", "end", values=(str(self.ts_global.simbolos[i].id),str(self.ts_global.simbolos[i].rol),str(tipo),str(self.ts_global.simbolos[i].valor)))
-        
-        closeButton = tk.Button(newWindow, text="Close", width=15, command=exit).grid(row=4, column=1)
-
+    
 
     def showtree(self):
+
         newWindow = Tk()
         label = tk.Label(newWindow, text="Arbol Sintactico", font=("Arial",30))
         label.pack()
@@ -151,28 +205,208 @@ class Notepad:
     
 
     def showTE(self):
+        def close_window(): 
+            newWindow.destroy()
         newWindow = Tk()
+        widht = 1200
+        height =750
+        # For top and bottom 
+        newWindow.geometry('%dx%d' % (widht, 
+                                              height))
         label = tk.Label(newWindow, text="Tabla de errores", font=("Arial",30)).grid(row=0, columnspan=3)
         cols = ('Tipo de error', 'Descripcion', 'Linea','Columna')
-        listBox = ttk.Treeview(newWindow, columns=cols, show='headings')
+        f1 = tk.Frame(newWindow)
+        f1.grid(column=0, row=1,columnspan=2, sticky="ns")
+        newWindow.rowconfigure(1, weight=1)
+        listBox = ttk.Treeview(f1, columns=cols, show='headings')
         for col in cols:
-            listBox.heading(col, text=col)    
-        listBox.grid(row=1, column=0, columnspan=2)
+            listBox.heading(col, text=col)  
+            listBox.column(col, width=300,anchor="center") 
+        listBox.pack(expand=True, fill='y')
         
         for mensaje in self.errores:
             
             listBox.insert("", "end", values=(str(mensaje.errtype),str(mensaje.text),str(mensaje.linea),str(mensaje.columna)))
         
-        closeButton = tk.Button(newWindow, text="Close", width=15, command=exit).grid(row=4, column=1)
+        closeButton = tk.Button(newWindow, text="Close", width=15, command=close_window).grid(row=4, column=1)
+        closeButton = tk.Button(newWindow, text="Exit", width=15, command=exit).grid(row=4, column=0)
+
+    def showGRA(self):
+        def close_window(): 
+            newWindow.destroy()
+        newWindow = Tk()
+        widht = 1200
+        height =750
+        # For top and bottom 
+        newWindow.geometry('%dx%d' % (widht, 
+                                              height))
+        label = tk.Label(newWindow, text="Reporte gramatical", font=("Arial",30)).grid(row=0, columnspan=3)
+        cols = ('Produccion', 'Acción')
+        f1 = tk.Frame(newWindow)
+        f1.grid(column=0, row=1,columnspan=2, sticky="ns")
+        newWindow.rowconfigure(1, weight=1)
+
+        listBox = ttk.Treeview(f1, columns=cols, show='headings')
+        for col in cols:
+            listBox.heading(col, text=col) 
+            listBox.column(col, width=600,anchor="w") 
+   
+        listBox.pack(expand=True, fill='y')
+        for regla in GLO.gramatica:
+            
+            listBox.insert("", "end", values=(GLO.gramatica[regla]['rule'],GLO.gramatica[regla]['action']))
+        
+        closeButton = tk.Button(newWindow, text="Close", width=15, command=close_window).grid(row=4, column=1)
+        closeButton = tk.Button(newWindow, text="Exit", width=15, command=exit).grid(row=4, column=0)
+
+
+    def debug_stop(self):
+
+        print("Debugging Detenido")
+        GLO.pila_action = None
+        GLO.action_puntero = 0
+        GLO.current_etiqueta = None
+        GLO.TSG = None
+        showinfo("Notice","Debugging Detenido")
+
+        self.DebNX.config(state='disabled')
+        self.DebST.config(state='disabled')
+        self.ToDEB.config(state='normal')
+        self.ToRun.config(state='normal')
+        self.ToAST.config(state='normal')
+        self.ToDES.config(state='normal')
+        self.ToERR.config(state='normal')
+        #print(str(GLO.pila_action))
+
+    
+    def debug_next(self):
+
+        if GLO.pila_action is not None:
+           #do
+            if GLO.action_puntero< len(GLO.pila_action):
+                instr = GLO.pila_action[GLO.action_puntero]
+                print(str(instr))
+                if isinstance(instr,GoTo):
+                    
+                    #change
+                    Simbolo = self.ts_global.obtener(instr.id)
+                    et = Simbolo.valor
+                    if  isinstance(et, Etiqueta):
+                        GLO.current_etiqueta = et
+                        GLO.pila_action = et.instrucciones
+                        GLO.action_puntero = -1
+                    else:
+                        print("El salto no se dirige a una etiqueta")
+                        ms.AddMensaje(MS.Mensaje("El salto no se dirige hacia una etiqueta",self.linea,self.columna,True,"Semantico"))
+
+                else:
+                    if isinstance(instr,Asignacion):
+                        instr.etiqueta = GLO.current_etiqueta
+                    result = instr.ejecutar(self.ts_global,self.ms_global)
+                
+                GLO.action_puntero +=1
+            else:
+                self.debug_stop()
+                
+        else:
+            showinfo("Notice","No se tiene informacion en la pila")
+
+        
+
+        
+    
+    
+    
+    
+    
+    def debug(self):
+
+        print("Iniciando analisis")
+        ts_global = TS.TablaDeSimbolos()
+        ms_global = MS.Mensajes()
+        parser = GR.Gramatica(ms_global)
+        input = self.ToAnalize.get("1.0",'end-1c')
+        input += " \n exit;"
+        instrucciones = parser.parse(input)
+        #SinLex = parser.Errors()
+        if instrucciones is not None:
+                self.debug_instrucciones(instrucciones, ts_global, ms_global)
+        salida=""
+        showinfo("Notice","Debugging comenzado")
+
+        self.DebNX.config(state='normal')
+        self.DebST.config(state='normal')
+        self.ToDEB.config(state='disabled')
+        self.ToRun.config(state='disabled')
+        self.ToAST.config(state='disabled')
+        self.ToDES.config(state='disabled')
+        self.ToERR.config(state='disabled')
+        self.ts_global = ts_global
+        self.ms_global = ms_global
+        #print(str(GLO.pila_action))
 
 
 
+    def analizardesc(self):
 
+        print("Iniciando analisis")
+        ts_global = TS.TablaDeSimbolos()
+        ms_global = MS.Mensajes()
+        parser = GR.Gramatica(ms_global)
+        input = self.ToAnalize.get("1.0",'end-1c')
+        input += " \n exit;"
+        instrucciones = parser.parse(input)
+        #SinLex = parser.Errors()
+
+        if instrucciones is not None:
+                self.procesar_instrucciones(instrucciones, ts_global, ms_global)
+        salida=""
+        if (ms_global.correcto):
+            print("Analisis correcto")
+            showinfo("Notepad","Analisis correcto")
+            prints = ms_global.GetMensajes()
+            for Mensaje in prints:
+                print(Mensaje.constructMensaje())
+                salida+=Mensaje.constructMensaje() 
+            arparser = ARDES.ASTDES()
+            raiz = arparser.parse(input)
+            graf = TreeMaker(raiz)
+            try:
+                graf.crearArbol()
+            except:
+                print ("No se genero el arbol")
+            #self.ToTS.config(state='normal')
+            #self.ToERR.config(state='disabled')
+            
+        else:
+            print("Se encontraron errores")
+            showinfo("Notepad","Se encontraron errores")
+            self.errores = ms_global.GetErrores()
+            
+            '''if (SinLex is not None):
+                for Mensaje in SinLex.mensajes:
+                    print(Mensaje.constructError())
+                    salida+=Mensaje.constructError()'''
+            for Mensaje in self.errores:
+                print(Mensaje.constructError())
+                salida+=Mensaje.constructError()
+            #self.ToTS.config(state='disabled')
+            #self.ToERR.config(state='normal')
+
+        self.setText(salida)
+        self.ts_global=ts_global
+        self.ms_global = ms_global
+        self.ts_global.printts()
+
+
+    
 
 
     def analizar(self):
 
         print("Iniciando analisis")
+        print("limite: "+str(self.old_limit))
+        ts_global = TS.TablaDeSimbolos()
         ms_global = MS.Mensajes()
         parser = GR.Gramatica(ms_global)
         input = self.ToAnalize.get("1.0",'end-1c')
@@ -183,7 +417,7 @@ class Notepad:
 
 
         if instrucciones is not None:
-                self.procesar_instrucciones(instrucciones, self.ts_global, ms_global)
+                self.procesar_instrucciones(instrucciones, ts_global, ms_global)
         salida=""
         if (ms_global.correcto):
             print("Analisis correcto")
@@ -199,8 +433,8 @@ class Notepad:
                 graf.crearArbol()
             except:
                 print ("No se genero el arbol")
-            self.ToTS.config(state='normal')
-            self.ToERR.config(state='disabled')
+            #self.ToTS.config(state='normal')
+            #self.ToERR.config(state='disabled')
             
         else:
             print("Se encontraron errores")
@@ -214,47 +448,65 @@ class Notepad:
             for Mensaje in self.errores:
                 print(Mensaje.constructError())
                 salida+=Mensaje.constructError()
-            self.ToTS.config(state='disabled')
-            self.ToERR.config(state='normal')
+            #self.ToTS.config(state='disabled')
+            #self.ToERR.config(state='normal')
 
         self.setText(salida)
+        self.ts_global = ts_global
+        self.ms_global = ms_global
         self.ts_global.printts()
 
 
 
     def __init__(self,**kwargs): 
   
-        self.window = Tk()
+        GLO.window = Tk()
+        self.old_limit = sys.getrecursionlimit()
         # default window width and height 
         self.__thisWidth = 300
         self.__thisHeight = 300
-        self.ToAnalize = CustomText(self.window)
-        self.ToConsole = Text(self.window,height = 200, background="#2A2C2E",foreground="#24EA3C") 
-        self.Frame1 = Frame(self.window,height = 40) 
-        self.Frame2 = Frame(self.window,height = 20) 
-        self.Fleft = Text(self.window,width = 10) 
-        self.Fright = Text(self.window, width=20) 
-        self.on_button_photo = PhotoImage(file="./ico/play4.png")
-        self.pic = self.on_button_photo.subsample(10,10)
+        self.ToAnalize = CustomText(GLO.window)
+        self.ToConsole = Text(GLO.window,height = 200, background="#2A2C2E",foreground="#24EA3C") 
+        self.Frame1 = Frame(GLO.window,height = 40) 
+        self.Frame2 = Frame(GLO.window,height = 20) 
+        self.Fleft = Text(GLO.window,width = 30) 
+        self.Fright = Text(GLO.window, width=20) 
+
+        self.playico = PhotoImage(file="./ico/play7.png")
+        self.playpic = self.playico.subsample(25,25)
+
+        self.debico = PhotoImage(file="./ico/debug.png")
+        self.debpic = self.debico.subsample(14,14)
+
+        self.desico = PhotoImage(file="./ico/play4.png")
+        self.despic = self.desico.subsample(12,12)
+
         self.ToRun = Button(self.Frame1, text = 'Analizar',bd=0, command =self.analizar)
-        self.ToTS = Button(self.Frame1, text = 'Tabla de simbolos', command =self.showTS, state='disabled')
+        self.ToTS = Button(self.Frame1, text = 'Tabla de Simbolos', command =self.showTS, state='normal')
         self.ToAST = Button(self.Frame1, text = 'AST', command =self.showtree)
-        self.ToDES = Button(self.Frame1, text = 'Descendente')
-        self.ToERR = Button(self.Frame1, text = 'ERR',command =self.showTE,state='disabled')
-        self.__thisMenuBar = Menu(self.window) 
-        self.__thisFileMenu = Menu(self.__thisMenuBar, tearoff=0) 
-        self.__thisEditMenu = Menu(self.__thisMenuBar, tearoff=0) 
-        self.__thisHelpMenu = Menu(self.__thisMenuBar, tearoff=0) 
-        self.linenumbers = TextLineNumbers(self.Fleft, width=10)
+        self.ToDES = Button(self.Frame1, text = 'Descendente',bd=0, command =self.analizardesc)
+        self.ToDEB = Button(self.Frame1, text = 'Debugger',bd=0, command =self.debug)
+        self.DebNX = Button(self.Frame1, text = 'Next',bd=0,state ='disabled',command =self.debug_next)
+        self.DebST = Button(self.Frame1, text = 'Stop',bd=0,state='disabled',command =self.debug_stop)
+        self.ToGRA = Button(self.Frame1, text = 'Gramatica',command =self.showGRA)
+        self.ToERR = Button(self.Frame1, text = 'Tabla Errores',command =self.showTE,state='normal')
+        self.MenuBar = Menu(GLO.window) 
+        self.BarFile = Menu(self.MenuBar, tearoff=0) 
+        self.BarEdit = Menu(self.MenuBar, tearoff=0) 
+        self.BarOptions = Menu(self.MenuBar, tearoff=0) 
+        self.BarHelp = Menu(self.MenuBar, tearoff=0) 
+        self.linenumbers = TextLineNumbers(self.Fleft, width=20)
         # To add scrollbar 
         self.ScrollA = Scrollbar(self.Fright)      
         self.ScrollC = Scrollbar(self.ToConsole)      
         self.__file = None
         self.errores = None
+        self.shouldcolor = False
+        self.backcolor = 0
         set
         # Set icon 
         try: 
-                self.window.wm_iconbitmap("./ico/not2.png")  
+                GLO.window.wm_iconbitmap("./ico/not2.png")  
         except: 
                 pass
   
@@ -271,11 +523,11 @@ class Notepad:
             pass
   
         # Set the window text 
-        self.window.title("Untitled - Notepad") 
+        GLO.window.title("Untitled - Notepad") 
   
         # Center the window 
-        screenWidth = self.window.winfo_screenwidth() 
-        screenHeight = self.window.winfo_screenheight() 
+        screenWidth = GLO.window.winfo_screenwidth() 
+        screenHeight = GLO.window.winfo_screenheight() 
       
         # For left-alling 
         left = (screenWidth / 2) - (self.__thisWidth / 2)  
@@ -284,22 +536,28 @@ class Notepad:
         top = (screenHeight / 2) - (self.__thisHeight /2)  
           
         # For top and bottom 
-        self.window.geometry('%dx%d+%d+%d' % (self.__thisWidth, 
+        GLO.window.geometry('%dx%d+%d+%d' % (self.__thisWidth, 
                                               self.__thisHeight, 
                                               left, top))  
   
         # To make the textarea auto resizable 
-        self.window.rowconfigure(1, weight=3) 
-        self.window.rowconfigure(3, weight=1) 
-        self.window.columnconfigure(1, weight=1) 
+        GLO.window.rowconfigure(1, weight=3) 
+        GLO.window.rowconfigure(3, weight=1) 
+        GLO.window.columnconfigure(1, weight=1) 
   
         # Add controls (widget) 
-        self.ToRun.config(image = self.pic)
-        self.ToRun.grid(row = 0,column=3)
-        self.ToTS.grid(row = 0,column=1)
-        self.ToAST.grid(row = 0,column=5)
-        self.ToDES.grid(row = 0,column=4,padx = 100)
-        self.ToERR.grid(row = 0,column=2,padx = 100)
+        self.ToRun.config(image = self.playpic)
+        self.ToDEB.config(image = self.debpic)
+        self.ToDES.config(image = self.despic)
+        self.ToRun.grid(row = 0,column=5,padx = 23)
+        self.ToTS.grid(row = 0,column=0,padx = 21)
+        self.ToAST.grid(row = 0,column=1,padx = 21)
+        self.ToDES.grid(row = 0,column=6,padx = 21)
+        self.ToERR.grid(row = 0,column=7,padx = 21)
+        self.ToDEB.grid(row = 0,column=3)
+        self.DebST.grid(row = 0,column=2)
+        self.DebNX.grid(row = 0,column=4)
+        self.ToGRA.grid(row = 0,column=8,padx = 21)
         self.ToAnalize.grid(row=1,column=1,sticky = N + E + S + W) 
         self.Frame1.grid(row=0,column=1,sticky = N + E + S + W)
         self.Frame2.grid(row=2,column=1,sticky = N + E + S + W)
@@ -308,47 +566,65 @@ class Notepad:
         self.Fright.grid(row=1,column=2,sticky = N + E + S + W)
           
         # To open new file 
-        self.__thisFileMenu.add_command(label="New", 
+        self.BarFile.add_command(label="New", 
                                         command=self.__newFile)     
           
         # To open a already existing file 
-        self.__thisFileMenu.add_command(label="Open", 
+        self.BarFile.add_command(label="Open", 
                                         command=self.__openFile) 
           
         # To save current file 
-        self.__thisFileMenu.add_command(label="Save", 
-                                        command=self.__saveFile)     
+        self.BarFile.add_command(label="Save", 
+                                        command=self.__saveFile)  
+
+        self.BarFile.add_command(label="Save As", 
+                                        command=self.__saveFileAs)   
+
   
         # To create a line in the dialog         
-        self.__thisFileMenu.add_separator()                                          
-        self.__thisFileMenu.add_command(label="Exit", 
+        self.BarFile.add_separator()    
+        self.BarFile.add_command(label="Close", 
+                                        command=self.__newFile)                                          
+        self.BarFile.add_command(label="Exit", 
                                         command=self.__quitApplication) 
-        self.__thisMenuBar.add_cascade(label="File", 
-                                       menu=self.__thisFileMenu)      
+        self.MenuBar.add_cascade(label="File", 
+                                       menu=self.BarFile)      
           
         # To give a feature of cut  
-        self.__thisEditMenu.add_command(label="Cut", 
+        self.BarEdit.add_command(label="Cut", 
                                         command=self.__cut)              
       
         # to give a feature of copy     
-        self.__thisEditMenu.add_command(label="Copy", 
+        self.BarEdit.add_command(label="Copy", 
                                         command=self.__copy)          
           
         # To give a feature of paste 
-        self.__thisEditMenu.add_command(label="Paste", 
+        self.BarEdit.add_command(label="Paste", 
                                         command=self.__paste)          
           
         # To give a feature of editing 
-        self.__thisMenuBar.add_cascade(label="Edit", 
-                                       menu=self.__thisEditMenu)      
+        self.MenuBar.add_cascade(label="Edit", 
+                                       menu=self.BarEdit)      
+
+        # To give a feature of cut  
+        self.BarOptions.add_command(label="Toogle Colors", 
+                                        command=self.__toggleColors)              
+        self.BarOptions.add_command(label="Change Background color", 
+                                        command=self.__backgroundchange)  
+          
+        # To give a feature of editing 
+        self.MenuBar.add_cascade(label="Options", 
+                                       menu=self.BarOptions)     
           
         # To create a feature of description of the notepad 
-        self.__thisHelpMenu.add_command(label="About Notepad", 
-                                        command=self.__showAbout)  
-        self.__thisMenuBar.add_cascade(label="Help", 
-                                       menu=self.__thisHelpMenu) 
+        self.BarHelp.add_command(label="Help", 
+                                        command=self.__showAbout) 
+        self.BarHelp.add_command(label="About", 
+                                        command=self.__showAbout) 
+        self.MenuBar.add_cascade(label="Help", 
+                                       menu=self.BarHelp) 
   
-        self.window.config(menu=self.__thisMenuBar) 
+        GLO.window.config(menu=self.MenuBar) 
   
         self.ScrollA.pack(side=RIGHT,fill=Y)                     
           
@@ -367,7 +643,7 @@ class Notepad:
 
         self.ToAnalize.bind("<<Change>>", self._on_change)
         self.ToAnalize.bind("<Configure>", self._on_change)
-        self.window.bind("<KeyRelease>", self.syn)
+        GLO.window.bind("<space>", self.syn)
 
 
     def syn(self,event=None):
@@ -382,31 +658,32 @@ class Notepad:
             for i, j in index:
                 self.ToAnalize.tag_add(word, i, j)
                 self.ToAnalize.tag_configure(word, foreground=color)
-
-        for token, content in lex(self.ToAnalize.get("1.0", "end"), PythonLexer()):
-            if token == Token.Literal.Number.Integer:
-                colorize(content, color="purple")
-            elif token == Token.Operator.Word:
-                colorize(content, color="red")
-            elif token == Token.Name.Builtin:
-                colorize(content, color="blue")
-            elif token == Token.Comment.Hashbang or token == Token.Comment.Single:
-                colorize(content, color="grey")
-            elif token == Token.Keyword.Namespace:
-                colorize(content, color="yellow")
-            elif token == Token.Namespace:
-                colorize(content, color="green")
-            elif token == Token.Punctuation:
-                colorize(content, color="brown")
-            elif token == Token.Literal.String.Double:
-                colorize(content, color="orange")
-            elif token == Token.Name:
-                if (content == "char")or(content=="goto"):
+        if self.shouldcolor:
+            text = self.ToAnalize.get("1.0", "end")
+            for token, content in lex(text, PythonLexer()):
+                if token == Token.Literal.Number.Integer:
                     colorize(content, color="purple")
-                else:
+                elif token == Token.Operator.Word:
+                    colorize(content, color="red")
+                elif token == Token.Name.Builtin:
+                    colorize(content, color="blue")
+                elif token == Token.Comment.Hashbang or token == Token.Comment.Single:
+                    colorize(content, color="grey")
+                elif token == Token.Keyword.Namespace:
+                    colorize(content, color="yellow")
+                elif token == Token.Namespace:
                     colorize(content, color="green")
-            elif (content == "$"):
-                    colorize(content, color="green")
+                elif token == Token.Punctuation:
+                    colorize(content, color="brown")
+                elif token == Token.Literal.String.Double:
+                    colorize(content, color="orange")
+                elif token == Token.Name:
+                    if (content == "char")or(content=="goto"):
+                        colorize(content, color="purple")
+                    else:
+                        colorize(content, color="green")
+                elif (content == "$"):
+                        colorize(content, color="green")
             
 
     
@@ -415,11 +692,11 @@ class Notepad:
         self.linenumbers.redraw()
 
     def __quitApplication(self): 
-        self.window.destroy() 
+        GLO.window.destroy() 
         # exit() 
   
     def __showAbout(self): 
-        showinfo("Notepad","Mrinal Verma") 
+        showinfo("About","Fernando Andrés Mérida Antón \n 201314713") 
   
     def __openFile(self): 
           
@@ -435,7 +712,7 @@ class Notepad:
               
             # Try to open the file 
             # set the window title 
-            self.window.title(os.path.basename(self.__file) + " - Notepad") 
+            GLO.window.title(os.path.basename(self.__file) + " - Notepad") 
             self.ToAnalize.delete(1.0,END) 
   
             file = open(self.__file,"r") 
@@ -446,7 +723,7 @@ class Notepad:
   
           
     def __newFile(self): 
-        self.window.title("Untitled - Notepad") 
+        GLO.window.title("Untitled - Notepad") 
         self.__file = None
         self.ToAnalize.delete(1.0,END) 
   
@@ -469,13 +746,36 @@ class Notepad:
                 file.close() 
                   
                 # Change the window title 
-                self.window.title(os.path.basename(self.__file) + " - Notepad") 
+                GLO.window.title(os.path.basename(self.__file) + " - Notepad") 
                   
               
         else: 
             file = open(self.__file,"w") 
             file.write(self.ToAnalize.get(1.0,END)) 
             file.close() 
+
+    def __saveFileAs(self): 
+  
+            # Save as new file 
+            self.__file = asksaveasfilename(initialfile='Untitled.txt', 
+                                            defaultextension=".txt", 
+                                            filetypes=[("All Files","*.*"), 
+                                                ("Text Documents","*.txt")]) 
+  
+            if self.__file == "": 
+                self.__file = None
+            else: 
+                  
+                # Try to save the file 
+                file = open(self.__file,"w") 
+                file.write(self.ToAnalize.get(1.0,END)) 
+                file.close() 
+                  
+                # Change the window title 
+                GLO.window.title(os.path.basename(self.__file) + " - Notepad") 
+                  
+              
+        
   
     def __cut(self): 
         self.ToAnalize.event_generate("<<Cut>>") 
@@ -485,11 +785,35 @@ class Notepad:
   
     def __paste(self): 
         self.ToAnalize.event_generate("<<Paste>>") 
+    
+    def __toggleColors(self): 
+        if self.shouldcolor:
+            self.shouldcolor = False
+        else:
+            self.shouldcolor = True
+    
+    def __backgroundchange(self): 
+        self.backcolor +=1
+        if self.backcolor == 0:
+            self.ToAnalize.configure(background="white")
+        elif self.backcolor == 1:
+            self.ToAnalize.configure(background="#e1f1fa")
+        elif self.backcolor == 2:
+            self.ToAnalize.configure(background="#faded9")
+        elif self.backcolor == 3:
+            self.ToAnalize.configure(background="#ecffe6")
+        elif self.backcolor == 4:
+            self.ToAnalize.configure(background="#f6d5f7")
+        elif self.backcolor == 5:
+            self.ToAnalize.configure(background="#c1f6f7")
+            self.backcolor = -1
+        else:
+            self.ToAnalize.configure(background="white")
   
     def run(self): 
   
         # Run main application 
-        self.window.mainloop() 
+        GLO.window.mainloop() 
 
 
   

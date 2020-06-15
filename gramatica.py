@@ -4,8 +4,10 @@ import ply.yacc as yacc
 from Print import *
 from Unset import *
 from Asignacion import *
+from RefAsignacion import *
 from Exit import *
 from GoTo import *
+from Read import *
 from If import *
 from expresiones import *
 from instrucciones import *
@@ -17,9 +19,10 @@ class Gramatica():
     
     def __init__(self,ms_gramatica) :
         self.ms_gramatica = ms_gramatica
+        self.input = ""
 
-   
-        
+
+
     reservadas = {
         'int'  : 'wint',
         'char' : 'wchar',
@@ -152,8 +155,8 @@ class Gramatica():
         t.lexer.lineno += t.value.count("\n")
         
     def t_error(self,t):
-        print("Illegal character '%s'" % t.value[0])
-        self.ms_gramatica.AddMensaje(MS.Mensaje("Caracter no encontrado: "+str(t.value[0]),t.lineno,t.lexpos,True,"Lexico"))
+        print("Illegal character '%s'" % t.value[0]+"column" +str(self.find_column(self.input,t)))
+        self.ms_gramatica.AddMensaje(MS.Mensaje("Caracter no encontrado: "+str(t.value[0]),t.lineno,self.find_column(self.input,t),True,"Lexico"))
 
         t.lexer.skip(1)
 
@@ -169,21 +172,26 @@ class Gramatica():
         ('right','igual'),
         ('left','lor'),
         ('left','land'),
+        ('left','bor'),
+        ('left','wxor'),
+        ('left','bxor'),
+        ('left','band'),
         ('left','igualdad','diferente'),
         ('left','menor','mayor','menorigual','mayorigual'),
+        ('left','bshiftl','bshiftr'),
         ('left','mas','menos'),
-        ('left','por','dividido'),
-        ('right','Umenos'),
-        ('left','parea','parec'),
+        ('left','por','dividido','modulo'),
+        ('right','Umenos','lnot','bnot'),
+        ('left','parea','parec','corcha','corchc'),
         )
 
     # Definición de la gramática
-    def find_column(input, token):
-        print("este es input: " +input)
-        line_start = str(input).rfind('\n', 0, token.lexpos) + 1
-        print((token.lexpos - line_start) + 1)
-    
-
+    def find_column(self,input,token):
+        last_cr = input.rfind('\n',0,token.lexpos)+1
+        if last_cr < 0:
+            last_cr = 0
+        column = (token.lexpos - last_cr) + 1
+        return column
 
     def p_INI(self,t) :
         'INI            : LETS'
@@ -201,7 +209,7 @@ class Gramatica():
 
     def p_ETQ(self,t) :
         '''ET      : ID dosp LINS'''
-        t[0] = Etiqueta(t[1],None, t[3])
+        t[0] = Etiqueta(t[1],None, t[3],t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
 
 
     def p_LINS_lista(self,t) :
@@ -242,27 +250,28 @@ class Gramatica():
 
     def p_INS_PRINT(self,t) :
         'PRINT     : wprint parea EXP parec ptocoma'
-        t[0] =Print(t[3],t.slice[1].lineno,t.slice[1].lexpos)
+        t[0] =Print(t[3],t.slice[1].lineno,self.find_column(self.input,t.slice[2]))
     def p_ASIGNACION(self,t) :
         'ASIGNACION   : VAR igual EXP ptocoma'
-        t[0] =Asignacion(t[1], t[3],t.slice[2].lineno,t.slice[2].lexpos)
+        t[0] =Asignacion(t[1], t[3],t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
 
     def p_ASIGNACION_REF(self,t) :
         'ASIGNACION   : VAR igual band dollar ID ptocoma'
-        t[0] =RefAsignacion(t[1], t[5], "Variable")
+        t[0] =RefAsignacion(t[1], t[5],t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
 
 
     def p_SALTO(self,t) :
         'SALTO   : wgoto ID ptocoma'
-        t[0] =GoTo(t[2],t.slice[1].lineno,t.slice[1].lexpos)
+        t[0] =GoTo(t[2],t.slice[1].lineno,self.find_column(self.input,t.slice[1]))
 
     def p_EXIT(self,t) :
         'EXIT   : wexit ptocoma'
         t[0] =Exit()
 
+
     def p_UNSET(self,t) :
         'UNSET   : wunset parea EXP parec ptocoma'
-        t[0] =Unset(t[3],t.slice[1].lineno,t.slice[1].lexpos)
+        t[0] =Unset(t[3],t.slice[1].lineno,self.find_column(self.input,t.slice[2]))
 
 
 
@@ -368,9 +377,9 @@ class Gramatica():
                     | parea wfloat parec EXP 
                     | parea wchar parec EXP 
                         '''
-        if t[2] == 'int'  : t[0] = ExpConvertida(t[4], TIPO_DATO.INTEGER,t.slice[2].lineno,t.slice[2].lexpos)
-        elif t[2] == 'float': t[0] = ExpConvertida(t[4], TIPO_DATO.FLOAT,t.slice[2].lineno,t.slice[2].lexpos)
-        elif t[2] == 'char': t[0] = ExpConvertida(t[4], TIPO_DATO.CHAR,t.slice[2].lineno,t.slice[2].lexpos)
+        if t[2] == 'int'  : t[0] = ExpConvertida(t[4], TIPO_DATO.INTEGER,t.slice[2].lineno,self.find_column(self.input,t.slice[3]))
+        elif t[2] == 'float': t[0] = ExpConvertida(t[4], TIPO_DATO.FLOAT,t.slice[2].lineno,self.find_column(self.input,t.slice[3]))
+        elif t[2] == 'char': t[0] = ExpConvertida(t[4], TIPO_DATO.CHAR,t.slice[2].lineno,self.find_column(self.input,t.slice[3]))
 
 
 
@@ -378,23 +387,27 @@ class Gramatica():
         'EXP     : warray parea parec '
         t[0] = Arreglo()
 
+    def p_EXP_READ(self,t) :
+        'EXP     : wread parea parec '
+        t[0] = Read(t.slice[2].lineno,self.find_column(self.input,t.slice[1]))
 
-    def p_error(self,t):
-        if t is not None:
-            self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(t.value),t.lineno,t.lexpos ,True,"Sintactico"))
-            print("Error sintáctico en '%s'" % t.value)
+    def p_error(self,p):
+        if p is not None:
+            self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(p.value),p.lineno,self.find_column(self.input,p) ,True,"Sintactico"))
+            print("Error sintáctico en '%s'" % p.value)
+        elif p.value =="exit":
+            self.ms_gramatica.AddMensaje(MS.Mensaje("No se pudo recuperar: ",0,0 ,True,"Sintactico"))
         else:
             self.ms_gramatica.AddMensaje(MS.Mensaje("No se pudo recuperar: ",0,0 ,True,"Sintactico"))
-
+        while 1:
+            tok = yacc.token()             # Get the next token
+            if not tok or tok.type == 'ptocoma': 
+                break
+        yacc.restart()
 
     def parse(self,input) :
+        self.input = input
         tokens = self.build()
         self.parser = yacc.yacc(module = self)
         return  self.parser.parse(input)
 
-
-    '''def Errors(self) :
-        if len(self.ms_gramatica.mensajes)==0:
-            return None
-        else:
-            return self.ms_gramatica'''
