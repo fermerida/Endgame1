@@ -8,6 +8,7 @@ import gramatica as GR
 import ts as TS
 from GoTo import *
 from Asignacion import *
+from Print import *
 import mensajes as MS
 import globalvar as GLO
 from instrucciones import *
@@ -23,6 +24,8 @@ import ASTDES as ARDES
 from TreeMaker import *
 from scrollimage import ScrollableImage   
 import sys
+sys.setrecursionlimit(1800)
+
 class TextLineNumbers(tk.Canvas):
     def __init__(self, *args, **kwargs):
         tk.Canvas.__init__(self, *args, **kwargs)
@@ -118,11 +121,11 @@ class Notepad:
             instr.actualizar(ts)
 
     def setText(self,text):
-        self.ToConsole.delete(1.0,"end")
-        self.ToConsole.insert(1.0, text)
+        GLO.ToConsole.delete(1.0,"end")
+        GLO.ToConsole.insert(1.0, text)
 
     def enterPressed(self,event=None):
-        text = self.ToConsole.get("1.0",'end-1c')
+        text = GLO.ToConsole.get("1.0",'end-1c')
         lines = text.split("\n")
         last_line = lines[-1]
         GLO.readinput = last_line
@@ -252,7 +255,7 @@ class Notepad:
             listBox.column(col, width=600,anchor="w") 
    
         listBox.pack(expand=True, fill='y')
-        for regla in GLO.gramatica:
+        for regla in sorted(GLO.gramatica.keys()):
             
             listBox.insert("", "end", values=(GLO.gramatica[regla]['rule'],GLO.gramatica[regla]['action']))
         
@@ -295,18 +298,28 @@ class Notepad:
                         GLO.current_etiqueta = et
                         GLO.pila_action = et.instrucciones
                         GLO.action_puntero = -1
+                        
                     else:
                         print("El salto no se dirige a una etiqueta")
                         ms.AddMensaje(MS.Mensaje("El salto no se dirige hacia una etiqueta",self.linea,self.columna,True,"Semantico"))
 
+                elif isinstance(instr, Print):
+                    result = instr.debug(self.ts_global,self.ms_global)
                 else:
                     if isinstance(instr,Asignacion):
                         instr.etiqueta = GLO.current_etiqueta
                     result = instr.ejecutar(self.ts_global,self.ms_global)
+
                 
                 GLO.action_puntero +=1
             else:
-                self.debug_stop()
+                if GLO.current_etiqueta.next is not None:
+                    GLO.pila_action = GLO.current_etiqueta.next.instrucciones
+                    GLO.current_etiqueta = GLO.current_etiqueta.next
+                    GLO.action_puntero = -1
+                        
+                else:
+                    self.debug_stop()
                 
         else:
             showinfo("Notice","No se tiene informacion en la pila")
@@ -353,6 +366,89 @@ class Notepad:
         ts_global = TS.TablaDeSimbolos()
         ms_global = MS.Mensajes()
         parser = GR.Gramatica(ms_global)
+        GLO.gramatica = {
+            63:{
+                'rule': 'EA  -> EB EAP',
+                'action': 'EA.val = EB.val + EAP.val;'
+            },
+            64:{
+                'rule': 'EAP  -> empty',
+                'action': 'EAP.val  = 0;'
+            },
+            65:{
+                'rule': 'EB  -> EC EBP',
+                'action': 'EB.val = EC.val + EBP.val;'
+            },
+            66:{
+                'rule': 'EBP  -> empty',
+                'action': 'EBP.val  = 0;'
+            },
+            67:{
+                'rule': 'EC  -> ED ECP',
+                'action': 'EB.val = ED.val + EBP.val;'
+            },
+            68:{
+                'rule': 'ECP  -> empty',
+                'action': 'ECP.val  = 0;'
+            },
+            69:{
+                'rule': 'ED  -> EE EDP',
+                'action': 'ED.val = EE.val + EDP.val;'
+            },
+            70:{
+                'rule': 'EDP  -> empty',
+                'action': 'EDP.val  = 0;'
+            },
+            71:{
+                'rule': 'EE  -> EF EEP',
+                'action': 'EE.val = EF.val + EEP.val;'
+            },
+            72:{
+                'rule': 'EEP  -> empty',
+                'action': 'EEP.val  = 0;'
+            },
+            73:{
+                'rule': 'EF  -> EG EFP',
+                'action': 'EF.val = EG.val + EFP.val;'
+            },
+            74:{
+                'rule': 'EFP  -> empty',
+                'action': 'EFP.val  = 0;'
+            },
+            75:{
+                'rule': 'EG  -> EH EGP',
+                'action': 'EG.val = EH.val + EGP.val;'
+            },
+            76:{
+                'rule': 'EGP  -> empty',
+                'action': 'EGP.val  = 0;'
+            },
+            77:{
+                'rule': 'EH  -> EJ EHP',
+                'action': 'EH.val = EJ.val + EHP.val;'
+            },
+            78:{
+                'rule': 'EHP  -> empty',
+                'action': 'EHP.val  = 0;'
+            },
+            79:{
+                'rule': 'EJ -> EK EDJ',
+                'action': 'EJ.val = EK.val + EJP.val;'
+            },
+            80:{
+                'rule': 'EJP  -> empty',
+                'action': 'EJP.val  = 0;'
+            },
+            81:{
+                'rule': 'EK  -> E EKP',
+                'action': 'EE.val = EF.val + EEP.val;'
+            },
+            82:{
+                'rule': 'EKP  -> empty',
+                'action': 'EKP.val  = 0;'
+            }
+        }
+        GLO.isdesc = True
         input = self.ToAnalize.get("1.0",'end-1c')
         input += " \n exit;"
         instrucciones = parser.parse(input)
@@ -405,10 +501,11 @@ class Notepad:
     def analizar(self):
 
         print("Iniciando analisis")
-        print("limite: "+str(self.old_limit))
         ts_global = TS.TablaDeSimbolos()
         ms_global = MS.Mensajes()
         parser = GR.Gramatica(ms_global)
+        GLO.gramatica = {}
+        GLO.isdesc = False
         input = self.ToAnalize.get("1.0",'end-1c')
         input += " \n exit;"
         instrucciones = parser.parse(input)
@@ -461,12 +558,11 @@ class Notepad:
     def __init__(self,**kwargs): 
   
         GLO.window = Tk()
-        self.old_limit = sys.getrecursionlimit()
         # default window width and height 
         self.__thisWidth = 300
         self.__thisHeight = 300
         self.ToAnalize = CustomText(GLO.window)
-        self.ToConsole = Text(GLO.window,height = 200, background="#2A2C2E",foreground="#24EA3C") 
+        GLO.ToConsole = Text(GLO.window,height = 200, background="#2A2C2E",foreground="#24EA3C") 
         self.Frame1 = Frame(GLO.window,height = 40) 
         self.Frame2 = Frame(GLO.window,height = 20) 
         self.Fleft = Text(GLO.window,width = 30) 
@@ -498,11 +594,12 @@ class Notepad:
         self.linenumbers = TextLineNumbers(self.Fleft, width=20)
         # To add scrollbar 
         self.ScrollA = Scrollbar(self.Fright)      
-        self.ScrollC = Scrollbar(self.ToConsole)      
-        self.__file = None
+        self.ScrollC = Scrollbar(GLO.ToConsole)      
+        self.archivo = None
         self.errores = None
         self.shouldcolor = False
         self.backcolor = 0
+        self.shouldlines =True
         set
         # Set icon 
         try: 
@@ -561,7 +658,7 @@ class Notepad:
         self.ToAnalize.grid(row=1,column=1,sticky = N + E + S + W) 
         self.Frame1.grid(row=0,column=1,sticky = N + E + S + W)
         self.Frame2.grid(row=2,column=1,sticky = N + E + S + W)
-        self.ToConsole.grid(row=3,column=1,sticky = N + E + S + W)
+        GLO.ToConsole.grid(row=3,column=1,sticky = N + E + S + W)
         self.Fleft.grid(row=1,column=0,sticky = N + E + S + W)
         self.Fright.grid(row=1,column=2,sticky = N + E + S + W)
           
@@ -608,7 +705,9 @@ class Notepad:
 
         # To give a feature of cut  
         self.BarOptions.add_command(label="Toogle Colors", 
-                                        command=self.__toggleColors)              
+                                        command=self.__toggleColors)  
+        self.BarOptions.add_command(label="Toogle Lines", 
+                                        command=self.__toggleLines)              
         self.BarOptions.add_command(label="Change Background color", 
                                         command=self.__backgroundchange)  
           
@@ -635,8 +734,8 @@ class Notepad:
         self.ScrollC.pack(side=RIGHT,fill=Y)                     
           
         # Scrollbar will adjust automatically according to the content         
-        self.ScrollC.config(command=self.ToConsole.yview)      
-        self.ToConsole.config(yscrollcommand=self.ScrollC.set) 
+        self.ScrollC.config(command=GLO.ToConsole.yview)      
+        GLO.ToConsole.config(yscrollcommand=self.ScrollC.set) 
       
         self.linenumbers.attach(self.ToAnalize)
         self.linenumbers.pack(side=LEFT, fill=Y)
@@ -689,7 +788,13 @@ class Notepad:
     
 
     def _on_change(self, event):
+        
         self.linenumbers.redraw()
+        if self.shouldlines:
+            self.linenumbers.pack(side=LEFT, fill=Y)
+        else:
+            self.linenumbers.pack_forget()
+
 
     def __quitApplication(self): 
         GLO.window.destroy() 
@@ -700,22 +805,22 @@ class Notepad:
   
     def __openFile(self): 
           
-        self.__file = askopenfilename(defaultextension=".txt", 
+        self.archivo = askopenfilename(defaultextension=".txt", 
                                       filetypes=[("All Files","*.*"), 
                                         ("Text Documents","*.txt")]) 
   
-        if self.__file == "": 
+        if self.archivo == "": 
               
             # no file to open 
-            self.__file = None
+            self.archivo = None
         else: 
               
             # Try to open the file 
             # set the window title 
-            GLO.window.title(os.path.basename(self.__file) + " - Notepad") 
+            GLO.window.title(os.path.basename(self.archivo) + " - Notepad") 
             self.ToAnalize.delete(1.0,END) 
   
-            file = open(self.__file,"r") 
+            file = open(self.archivo,"r") 
   
             self.ToAnalize.insert(1.0,file.read()) 
   
@@ -724,55 +829,55 @@ class Notepad:
           
     def __newFile(self): 
         GLO.window.title("Untitled - Notepad") 
-        self.__file = None
+        self.archivo = None
         self.ToAnalize.delete(1.0,END) 
   
     def __saveFile(self): 
   
-        if self.__file == None: 
+        if self.archivo == None: 
             # Save as new file 
-            self.__file = asksaveasfilename(initialfile='Untitled.txt', 
+            self.archivo = asksaveasfilename(initialfile='Untitled.txt', 
                                             defaultextension=".txt", 
                                             filetypes=[("All Files","*.*"), 
                                                 ("Text Documents","*.txt")]) 
   
-            if self.__file == "": 
-                self.__file = None
+            if self.archivo == "": 
+                self.archivo = None
             else: 
                   
                 # Try to save the file 
-                file = open(self.__file,"w") 
+                file = open(self.archivo,"w") 
                 file.write(self.ToAnalize.get(1.0,END)) 
                 file.close() 
                   
                 # Change the window title 
-                GLO.window.title(os.path.basename(self.__file) + " - Notepad") 
+                GLO.window.title(os.path.basename(self.archivo) + " - Notepad") 
                   
               
         else: 
-            file = open(self.__file,"w") 
+            file = open(self.archivo,"w") 
             file.write(self.ToAnalize.get(1.0,END)) 
             file.close() 
 
     def __saveFileAs(self): 
   
             # Save as new file 
-            self.__file = asksaveasfilename(initialfile='Untitled.txt', 
+            self.archivo = asksaveasfilename(initialfile='Untitled.txt', 
                                             defaultextension=".txt", 
                                             filetypes=[("All Files","*.*"), 
                                                 ("Text Documents","*.txt")]) 
   
-            if self.__file == "": 
-                self.__file = None
+            if self.archivo == "": 
+                self.archivo = None
             else: 
                   
                 # Try to save the file 
-                file = open(self.__file,"w") 
+                file = open(self.archivo,"w") 
                 file.write(self.ToAnalize.get(1.0,END)) 
                 file.close() 
                   
                 # Change the window title 
-                GLO.window.title(os.path.basename(self.__file) + " - Notepad") 
+                GLO.window.title(os.path.basename(self.archivo) + " - Notepad") 
                   
               
         
@@ -791,6 +896,12 @@ class Notepad:
             self.shouldcolor = False
         else:
             self.shouldcolor = True
+
+    def __toggleLines(self): 
+        if self.shouldlines:
+            self.shouldlines = False
+        else:
+            self.shouldlines = True
     
     def __backgroundchange(self): 
         self.backcolor +=1

@@ -77,11 +77,11 @@ class RefAsignacion(Instruccion) :
         print("id: "+str(self.var.id)+" referencia: " + str(reference))
         if self.var.accesos == None:
             if sym is not None:
-                simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,"Varible Referenciada",reference.dim,reference.etiqueta,declarada)
+                simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,tipo_et,reference.dim,reference.etiqueta,declarada)
                 simbolo.SetReference(reference.id)
                 ts.actualizar(simbolo)
             else:
-                simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,"Varible Referenciada",reference.dim,reference.etiqueta,declarada)      # inicializamos con 0 como valor por defecto
+                simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,tipo_et,reference.dim,reference.etiqueta,declarada)      # inicializamos con 0 como valor por defecto
                 simbolo.SetReference(reference.id)
                 ts.agregar(simbolo)
         else:
@@ -145,13 +145,13 @@ class RefAsignacion(Instruccion) :
                 rol = "Struct"
             #print("es este:"+str(array.values)+" from: "+self.var.id)
 
-            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,rol,reference.dim,reference.etiqueta,declarada)
+            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,reference.dim,reference.etiqueta,declarada)
 
             if sym is not None:
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    reference = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,rol,reference.dim,reference.etiqueta,reference.declarada)
+                    reference = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,reference.dim,reference.etiqueta,reference.declarada)
                     ts.actualizar(refsymbol)
             
             else:

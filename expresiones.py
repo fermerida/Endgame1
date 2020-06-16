@@ -1,6 +1,9 @@
 from enum import Enum
 import ts as TS
 import mensajes as MS
+import sys
+sys.setrecursionlimit(1800)
+
 class OPERACION_ARITMETICA(Enum) :
     MAS = 1
     MENOS = 2

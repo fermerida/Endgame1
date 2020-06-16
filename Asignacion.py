@@ -71,11 +71,11 @@ class Asignacion(Instruccion) :
         elif var == "s":
             if id =="sp":
                 #pila
-                return "Pila"
+                return "Puntero de pila"
 
             else:
                 #puntero
-                return "Puntero de pila"
+                return "Pila"
 
         else:
             #hay mas?
@@ -166,13 +166,13 @@ class Asignacion(Instruccion) :
                 rol = "Struct"
             #print("es este:"+str(array.values)+" from: "+self.var.id)
 
-            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,rol,len(array.values),self.etiqueta.id,declarada)
+            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,len(array.values),self.etiqueta.id,declarada)
 
             if sym is not None:
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    reference = TS.Simbolo(sym.reference, array.GetTipo(ts,ms), array,rol,len(array.values),self.etiqueta.id,declarada)
+                    reference = TS.Simbolo(sym.reference, array.GetTipo(ts,ms), array,tipo_et,len(array.values),self.etiqueta.id,declarada)
                     ts.actualizar(refsymbol)
             
             else:

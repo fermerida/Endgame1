@@ -1,0 +1,119 @@
+reservadas = {
+        'int'  : 'wint',
+        'char' : 'wchar',
+        'float': 'wfloat',
+        'goto' : 'wgoto',
+        'print': 'wprint',
+        'exit' : 'wexit',
+        'read' : 'wread',
+        'unset': 'wunset',
+        'abs'  : 'wabs',
+        'xor'  : 'wxor',
+        'if'  : 'wif',
+        'array'  : 'warray'
+    } tokens  = [
+        'dollar',
+        'ptocoma',
+        'dosp',
+        'parea',
+        'parec',
+        'corcha',
+        'corchc',
+        'igual',
+        'mas',
+        'menos',
+        'por',
+        'dividido',
+        'modulo',
+        'lnot',
+        'land',
+        'lor',
+        'bnot',
+        'band',
+        'bor',
+        'bxor',
+        'bshiftl',
+        'bshiftr',
+        'menor',
+        'mayor',
+        'menorigual',
+        'mayorigual',
+        'igualdad',
+        'diferente',
+        'DECIMAL',
+        'ENTERO',
+        'CADENA',
+        'CHAR',
+        'ID'
+
+ # Asociación de operadores y precedencia
+    precedence = (
+        ('right','igual'),
+        ('left','lor'),
+        ('left','land'),
+        ('left','igualdad','diferente'),
+        ('left','menor','mayor','menorigual','mayorigual'),
+        ('left','mas','menos'),
+        ('left','por','dividido'),
+        ('right','Umenos'),
+        ('left','parea','parec'),
+        ) # Definición de la gramática 
+ 
+        INI     : LETS 
+        LETS    : LETS ET
+        LETS    : ET 
+        ET      : ID dosp LINS 
+        LINS    : LINS INS
+        LINS    : INS  
+        INS     : PRINT
+                | ASIGNACION
+                | SALTO
+                | SIF
+                | EXIT
+                | UNSET 
+        VAR   : dollar ID LCOR
+              | dollar ID  
+        LCOR   : LCOR corcha EXP corchc
+        LCOR   : corcha EXP corchc 
+        PRINT  : wprint parea EXP parec ptocoma 
+        ASIGNACION : VAR igual EXP ptocoma
+        ASIGNACION : VAR igual band VAR ptocoma
+        SALTO  : wgoto ID ptocoma 
+        EXIT   : wexit ptocoma
+        UNSET  : wunset parea EXP parec ptocoma
+        SIF : wif parea EXP parec SALTO
+        EXP :     EXP mas EXP
+                | EXP menos EXP
+                | EXP por EXP
+                | EXP dividido EXP
+                | EXP modulo EXP 
+                |EXP mayor EXP
+                | EXP menor EXP
+                | EXP mayorigual EXP
+                | EXP menorigual EXP
+                | EXP igualdad EXP
+                | EXP diferente EXP
+                | EXP land EXP
+                | EXP lor EXP
+                | EXP wxor EXP
+                | lnot EXP
+                | EXP band EXP
+                | EXP bor EXP
+                | EXP bxor EXP
+                | EXP bshiftl EXP
+                | EXP bshiftr EXP
+                | bnot EXP
+                | menos EXP %prec Umenos
+                | parea EXP parec
+                | wabs parea EXP parec
+                | ENTERO
+                | DECIMAL
+                | VAR      
+                | CADENA    
+                | CHAR
+                | parea wint parec EXP 
+                | parea wfloat parec EXP 
+                | parea wchar parec EXP              
+                | warray parea parec 
+                | wread parea parec 
+        
