@@ -16,8 +16,7 @@ class RefAsignacion(Instruccion) :
         self.reference = reference
         self.linea = linea
         self.columna =columna
-        GLO.pila +=1
-        self.pila = GLO.pila
+        self.pila = 0
 
     def CheckA(self,list, ts,ms):
         isarray = True
@@ -73,14 +72,19 @@ class RefAsignacion(Instruccion) :
         sym = ts.obtener(self.var.id)
         reference = ts.obtener(self.reference)
         tipo_et=self.DefineRol(self.var.id)
-        declarada = self.Declaradaen()
         print("id: "+str(self.var.id)+" referencia: " + str(reference))
         if self.var.accesos == None:
             if sym is not None:
+                GLO.pila = GLO.pila +1
+                self.pila = GLO.pila
+                declarada = self.Declaradaen()
                 simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,tipo_et,reference.dim,reference.etiqueta,declarada)
                 simbolo.SetReference(reference.id)
                 ts.actualizar(simbolo)
             else:
+                GLO.pila = GLO.pila +1
+                self.pila = GLO.pila
+                declarada = self.Declaradaen()
                 simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,tipo_et,reference.dim,reference.etiqueta,declarada)      # inicializamos con 0 como valor por defecto
                 simbolo.SetReference(reference.id)
                 ts.agregar(simbolo)
@@ -91,6 +95,8 @@ class RefAsignacion(Instruccion) :
                     arreglo=array.values
                 else:
                     print("Este temporal ya contiene un dato")
+                    ms.AddMensaje(MS.Mensaje("Este temporal ya contiene un dato",self.linea,self.columna,True,"Semantico"))
+
                     return None
             else:
                 array = Arreglo()
@@ -127,9 +133,12 @@ class RefAsignacion(Instruccion) :
                                                 level[accesos[i]] = level[accesos[i]] + adding
                                         else:
                                             print("Solo se puede acceder con un numero a una cadena")
+                                            ms.AddMensaje(MS.Mensaje("Solo se puede acceder con un numero a una cadena",self.linea,self.columna,True,"Semantico"))
+
                                     else:
-                                        print("EError no se puede acceder a este tipo de elemento")
-                                
+                                        print("Error no se puede acceder a este tipo de elemento")
+                                        ms.AddMensaje(MS.Mensaje("Error no se puede acceder a este tipo de elemento",self.linea,self.columna,True,"Semantico"))
+
                         else:
                             ms.AddMensaje(MS.Mensaje("No se puede acceder a este tipo de elemento",self.linea,self.columna,True,"Semantico"))
                             print("error no se puede acceder a este tipo de elemento")
@@ -144,7 +153,9 @@ class RefAsignacion(Instruccion) :
             else:
                 rol = "Struct"
             #print("es este:"+str(array.values)+" from: "+self.var.id)
-
+            GLO.pila = GLO.pila +1
+            self.pila = GLO.pila
+            declarada = self.Declaradaen()
             simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,reference.dim,reference.etiqueta,declarada)
 
             if sym is not None:

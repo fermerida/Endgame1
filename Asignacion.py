@@ -28,8 +28,7 @@ class Asignacion(Instruccion) :
         self.linea = linea
         self.columna = columna
         self.etiqueta = None
-        GLO.pila +=1
-        self.pila = GLO.pila
+        self.pila = 0
 
     
     def CheckA(self,list, ts,ms):
@@ -51,7 +50,7 @@ class Asignacion(Instruccion) :
         declarada = {}
         declarada["linea"] = str(self.linea)    
         declarada["columna"] = str(self.columna)    
-        declarada["pila"] = str(self.pila)  
+        declarada["pila"] = str(GLO.pila)  
         return declarada  
        
     def DefineRol(self,id):
@@ -85,11 +84,14 @@ class Asignacion(Instruccion) :
         sym = ts.obtener(self.var.id)
         val = self.valor.GetValor(ts,ms)
         tipo_et=self.DefineRol(self.var.id)
-        declarada = self.Declaradaen()
+        
         
         #print("id: "+str(self.var.id)+" accesos:"+str(self.var.accesos))
         if self.var.accesos == None:
             if sym is not None:
+                GLO.pila = GLO.pila +1
+                self.pila = GLO.pila
+                declarada = self.Declaradaen()
                 simbolo = TS.Simbolo(self.var.id, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
@@ -103,6 +105,9 @@ class Asignacion(Instruccion) :
                     self.etiqueta.rol = "Metodo"
                 elif tipo_et =="Retorno de valor":
                     self.etiqueta.rol = "Funcion"
+                GLO.pila = GLO.pila +1
+                self.pila = GLO.pila
+                declarada = self.Declaradaen()
                 simbolo = TS.Simbolo(self.var.id, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)    
                 ts.agregar(simbolo)
         else:
@@ -112,6 +117,7 @@ class Asignacion(Instruccion) :
                     arreglo=array.values
                 else:
                     print("Este temporal ya contiene un dato")
+                    ms.AddMensaje(MS.Mensaje("Este temporal ya contiene un dato",self.linea,self.columna,True,"Semantico"))
                     return None
             else:
                 array = Arreglo()
@@ -148,9 +154,10 @@ class Asignacion(Instruccion) :
                                                 level[accesos[i]] = level[accesos[i]] + adding
                                         else:
                                             print("Solo se puede acceder con un numero a una cadena")
+                                            ms.AddMensaje(MS.Mensaje("Solo se puede acceder con un numero a una cadena",self.linea,self.columna,True,"Semantico"))
                                     else:
-                                        print("EError no se puede acceder a este tipo de elemento")
-                                
+                                        print("Error no se puede acceder a este tipo de elemento")
+                                        ms.AddMensaje(MS.Mensaje("Error no se puede acceder a este tipo de elemento",self.linea,self.columna,True,"Semantico"))
                         else:
                             ms.AddMensaje(MS.Mensaje("No se puede acceder a este tipo de elemento",self.linea,self.columna,True,"Semantico"))
                             print("error no se puede acceder a este tipo de elemento")
@@ -165,14 +172,17 @@ class Asignacion(Instruccion) :
             else:
                 rol = "Struct"
             #print("es este:"+str(array.values)+" from: "+self.var.id)
-
-            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,len(array.values),self.etiqueta.id,declarada)
+            dim = len(accesos)
+            GLO.pila = GLO.pila + dim + len(array.values)
+            self.pila = GLO.pila
+            declarada = self.Declaradaen()
+            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,dim,self.etiqueta.id,declarada)
 
             if sym is not None:
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    reference = TS.Simbolo(sym.reference, array.GetTipo(ts,ms), array,tipo_et,len(array.values),self.etiqueta.id,declarada)
+                    reference = TS.Simbolo(sym.reference, array.GetTipo(ts,ms), array,tipo_et,dim,self.etiqueta.id,declarada)
                     ts.actualizar(refsymbol)
             
             else:

@@ -17,18 +17,21 @@ class GoTo(Instruccion) :
         #ts.printts()
         result = None
         Simbolo = ts.obtener(self.id)
-        et = Simbolo.valor
-        if  isinstance(et, Etiqueta):
-            for instr in et.instrucciones :
-                if isinstance(instr,Asignacion):
-                    instr.etiqueta = et
-                result = instr.ejecutar(ts,ms)
-                if result == False:
-                    break
-            if  (et.next != None) and (result is None) :
-                et.next.ejecutar(ts,ms)
+        if Simbolo is not None: 
+            et = Simbolo.valor
+            if  isinstance(et, Etiqueta):
+                for instr in et.instrucciones :
+                    if isinstance(instr,Asignacion):
+                        instr.etiqueta = et
+                    result = instr.ejecutar(ts,ms)
+                    if result == False:
+                        break
+                if  (et.next != None) and (result is None) :
+                    et.next.ejecutar(ts,ms)
+            else:
+                ms.AddMensaje(MS.Mensaje("El salto no se dirige hacia una etiqueta",self.linea,self.columna,True,"Semantico"))
         else:
-            ms.AddMensaje(MS.Mensaje("El salto no se dirige hacia una etiqueta",self.linea,self.columna,True,"Semantico"))
+            ms.AddMensaje(MS.Mensaje("No existe salto a donde dirigirse",self.linea,self.columna,True,"Semantico"))
 
         
         

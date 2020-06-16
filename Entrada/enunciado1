@@ -4,13 +4,13 @@ main:
     $t1[0]['direccion']="zona 4";
     $t1[0]['telefono'][0]=4524344;
     $t1[0]['telefono'][1]=2444244;
-    $t1[0]['nombre']="Hugo";
-    $t1[0]['direccion']="zona 8";
-    $t1[0]['telefono'][0]=3314444;
-    $t1[0]['nombre']="Manuel";
-    $t1[0]['direccion']="zona 11";
-    $t1[0]['telefono'][0]=3334444;
-    $t1[0]['telefono'][1]=5858585;
+    $t1[1]['nombre']="Hugo";
+    $t1[1]['direccion']="zona 8";
+    $t1[1]['telefono'][0]=3314444;
+    $t1[2]['nombre']="Manuel";
+    $t1[2]['direccion']="zona 11";
+    $t1[2]['telefono'][0]=3334444;
+    $t1[2]['telefono'][1]=5858585;
 
     #imprime nombres del struct
     $t2=0;

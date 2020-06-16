@@ -162,9 +162,11 @@ class Variable(Exp) :
         Esta clase representa un identificador.
     '''
 
-    def __init__(self, id = "", accesos=None) :
+    def __init__(self, id = "", accesos=None,linea=0, columna=0) :
         self.id = id
         self.accesos = accesos
+        self.linea = linea
+        self.columna = columna
 
     def GetName(self,ts,ms):
         return self.id
@@ -200,6 +202,7 @@ class Variable(Exp) :
                 isint = self.CheckInt(self.accesos,ts,ms)
                 if (accesos is None):
                     print("Error obteniendo los accesos")
+                    ms.AddMensaje(MS.Mensaje("Error obteniendo los accesos",self.linea,self.columna,True,"Semantico"))
                     return None
                 if (sym.tipo== TS.TIPO_DATO.ARRAY) or (sym.tipo == TS.TIPO_DATO.STRUCT):
                     arreglo = sym.valor
@@ -215,6 +218,8 @@ class Variable(Exp) :
                                 value= level[accesos[i]] 
                             else:
                                 print("Error acceso a esta posicion esta vacios")
+                                ms.AddMensaje(MS.Mensaje("Error acceso a esta posicion esta vacios",self.linea,self.columna,True,"Semantico"))
+
                         else:
                             if accesos[i] in level:
                                 if isinstance(level[accesos[i]],dict):
@@ -228,16 +233,23 @@ class Variable(Exp) :
                                                 return level[accesos[i]][accesos[i+1]]
                                             else:
                                                 print("Posicion mayor a cadena")
+                                                ms.AddMensaje(MS.Mensaje("Posicion mayor a cadena",self.linea,self.columna,True,"Semantico"))
                                         else:
                                             print("Solo se puede acceder con un numero a una cadena")
+                                            ms.AddMensaje(MS.Mensaje("Solo se puede acceder con un numero a una cadena",self.linea,self.columna,True,"Semantico"))
+
                                     else:
-                                        print("EError no se puede acceder a este tipo de elemento")
+                                        print("Error no se puede acceder a este tipo de elemento")
+                                        ms.AddMensaje(MS.Mensaje("Error no se puede acceder a este tipo de elemento",self.linea,self.columna,True,"Semantico"))
                                 else:
                                     #error no se puede acceder a este tipo de elemento
                                     print("Error no se puede acceder a este tipo de elemento")
+                                    ms.AddMensaje(MS.Mensaje("Error no se puede acceder a este tipo de elemento",self.linea,self.columna,True,"Semantico"))
+
                                     break       
                             else:
                                 print("Error acceso a esta posicion esta vacio")
+                                ms.AddMensaje(MS.Mensaje("Error acceso a esta posicion esta vacio",self.linea,self.columna,True,"Semantico"))
                                 break   
                     return value
                 elif sym.tipo == TS.TIPO_DATO.CHAR:
@@ -247,13 +259,22 @@ class Variable(Exp) :
                                 return sym.valor[accesos[0]]
                             else:
                                 print("Posicion mayor a cadena")
+                                ms.AddMensaje(MS.Mensaje("Posicion mayor a cadena",self.linea,self.columna,True,"Semantico"))
+
                         else:
                             print("Solo se puede acceder con un numero a una cadena") 
+                            ms.AddMensaje(MS.Mensaje("Solo se puede acceder con un numero a una cadena",self.linea,self.columna,True,"Semantico"))
                     else:
                         print("No se puede acceder multiples veces a una cadena")
+                        ms.AddMensaje(MS.Mensaje("No se puede acceder multiples veces a una cadena",self.linea,self.columna,True,"Semantico"))
+
                 else:
                     print("No se puede aceeder a una variable con este tipo")
+                    ms.AddMensaje(MS.Mensaje("No se puede aceeder a una variable con este tipo",self.linea,self.columna,True,"Semantico"))
+
         print("No existe esta variable")
+        ms.AddMensaje(MS.Mensaje("No existe esta variable",self.linea,self.columna,True,"Semantico"))
+
         return None
 
     def GetTipo(self,ts,ms):
@@ -303,20 +324,26 @@ class Relacional() :
         Esta clase recibe los operandos y el operador
     '''
 
-    def __init__(self, exp1, exp2, operador) :
+    def __init__(self, exp1, exp2, operador,linea,columna) :
         self.exp1 = exp1
         self.exp2 = exp2
         self.operador = operador
+        self.linea = linea
+        self.columna = columna
     
     def GetValor(self,ts,ms):
         exp1 = self.exp1.GetValor(ts,ms)
         exp2 = self.exp2.GetValor(ts,ms)
-        if self.operador == OPERACION_RELACIONAL.MAYOR : return exp1 > exp2
-        if self.operador == OPERACION_RELACIONAL.MENOR : return exp1 < exp2
-        if self.operador == OPERACION_RELACIONAL.MAYORIGUAL : return exp1 >= exp2
-        if self.operador == OPERACION_RELACIONAL.MENORIGUAL : return exp1 <= exp2
-        if self.operador == OPERACION_RELACIONAL.IGUAL : return exp1 == exp2
-        if self.operador == OPERACION_RELACIONAL.DIFERENTE : return exp1 != exp2
+        if (exp1 is not None) and (exp2 is not None):
+            if self.operador == OPERACION_RELACIONAL.MAYOR : return exp1 > exp2
+            if self.operador == OPERACION_RELACIONAL.MENOR : return exp1 < exp2
+            if self.operador == OPERACION_RELACIONAL.MAYORIGUAL : return exp1 >= exp2
+            if self.operador == OPERACION_RELACIONAL.MENORIGUAL : return exp1 <= exp2
+            if self.operador == OPERACION_RELACIONAL.IGUAL : return exp1 == exp2
+            if self.operador == OPERACION_RELACIONAL.DIFERENTE : return exp1 != exp2
+        else:
+            print("Uno de los valores para la operacion relacional no fue declarado")
+            ms.AddMensaje(MS.Mensaje("Uno de los valores para la operacion relacional no fue declarado",self.linea,self.columna,True,"Semantico"))
 
     def GetTipo(self,ts,ms):
         return TS.TIPO_DATO.BOOLEAN

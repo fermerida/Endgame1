@@ -267,7 +267,7 @@ class Gramatica():
 
     def p_VAR(self,t) :
         'VAR   : dollar ID LCOR'
-        t[0] =Variable(t[2],t[3])
+        t[0] =Variable(t[2],t[3],t.slice[1].lineno,self.find_column(self.input,t.slice[1]))
         print ("descendente?: "+ str(GLO.isdesc))
         if GLO.isdesc:
             GLO.gramatica[13] = GLO.gram[60]
@@ -278,7 +278,7 @@ class Gramatica():
 
     def p_VARID(self,t) :
         'VAR   : dollar ID '
-        t[0] =Variable(t[2],None)
+        t[0] =Variable(t[2],None,t.slice[1].lineno,self.find_column(self.input,t.slice[1]))
         print ("descendente?: "+ str(GLO.isdesc))
         if GLO.isdesc:
             GLO.gramatica[14] = GLO.gram[60]
@@ -337,7 +337,7 @@ class Gramatica():
 
     def p_SIF(self,t) :
         'SIF           : wif parea EXP parec SALTO'
-        t[0] =If(t[3], t[5])
+        t[0] =If(t[3], t[5],t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
         GLO.gramatica[23] = GLO.gram[23]
 
 
@@ -375,22 +375,22 @@ class Gramatica():
                 | EXP diferente EXP
                 '''
         if t[2] == '>'    : 
-            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYOR)
+            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYOR,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             GLO.gramatica[29] = GLO.gram[29]
         elif t[2] == '<'  : 
-            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENOR)
+            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENOR,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             GLO.gramatica[30] = GLO.gram[30]
         elif t[2] == '>=' : 
-            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYORIGUAL)
+            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYORIGUAL,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             GLO.gramatica[31] = GLO.gram[31]
         elif t[2] == '<=' : 
-            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENORIGUAL)
+            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENORIGUAL,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             GLO.gramatica[32] = GLO.gram[32]
         elif t[2] == '==' : 
-            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.IGUAL)
+            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.IGUAL,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             GLO.gramatica[33] = GLO.gram[33]
         elif t[2] == '!=' : 
-            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.DIFERENTE)
+            t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.DIFERENTE,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             GLO.gramatica[34] = GLO.gram[34]
 
     def p_EXP_LOG(self,t) :
@@ -511,8 +511,12 @@ class Gramatica():
         if t is not None:
             self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(t.value),t.lineno,self.find_column(self.input,t) ,True,"Sintactico"))
             #print("Error sintáctico en '%s'" % p.value)
-            
+            while 1:
+                tok = yacc.token()             # Get the next token
+                if not tok or tok.type == 'ptocoma': 
+                    break
             yacc.errok()
+            return tok
 
         else:
             self.ms_gramatica.AddMensaje(MS.Mensaje("No se pudo recuperar: ",0,0 ,True,"Sintactico"))
