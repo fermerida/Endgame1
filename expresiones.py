@@ -42,10 +42,12 @@ class Exp:
 class Aritmetica(Exp) :
  
 
-    def __init__(self, exp1, exp2, operador) :
+    def __init__(self, exp1, exp2, operador,linea, columna) :
         self.exp1 = exp1
         self.exp2 = exp2
         self.operador = operador
+        self.linea = linea
+        self.columna = columna
     
     def MaxType(self,a,b):
         if (a == TS.TIPO_DATO.CHAR) or (b == TS.TIPO_DATO.CHAR):
@@ -60,15 +62,24 @@ class Aritmetica(Exp) :
         tipo2 = self.exp2.GetTipo(ts,ms)
 
         maxi = self.MaxType(tipo1,tipo2)
-
-        if maxi == TS.TIPO_DATO.INTEGER:
-            if self.operador == OPERACION_ARITMETICA.MAS : return exp1 + exp2
-            if self.operador == OPERACION_ARITMETICA.MENOS : return exp1 - exp2
-            if self.operador == OPERACION_ARITMETICA.POR : return exp1 * exp2
-            if self.operador == OPERACION_ARITMETICA.DIVIDIDO : return exp1 / exp2
-            if self.operador == OPERACION_ARITMETICA.MODULO : return exp1 % exp2
-        elif maxi ==TS.TIPO_DATO.CHAR:
-            if self.operador == OPERACION_ARITMETICA.MAS : return str(exp1) + str(exp2)
+        if (exp1 is not None) and (exp2 is not None):
+            if maxi == TS.TIPO_DATO.INTEGER:
+                if self.operador == OPERACION_ARITMETICA.MAS : return exp1 + exp2
+                if self.operador == OPERACION_ARITMETICA.MENOS : return exp1 - exp2
+                if self.operador == OPERACION_ARITMETICA.POR : return exp1 * exp2
+                if self.operador == OPERACION_ARITMETICA.DIVIDIDO : 
+                    if exp2 != 0:
+                        return exp1 / exp2
+                    else:
+                        print("No es posible dividr entre 0")
+                        ms.AddMensaje(MS.Mensaje("No es posible dividir entre 0",self.linea,self.columna,True,"Semantico"))
+                        return exp2
+                if self.operador == OPERACION_ARITMETICA.MODULO : return exp1 % exp2
+            elif maxi ==TS.TIPO_DATO.CHAR:
+                if self.operador == OPERACION_ARITMETICA.MAS : return str(exp1) + str(exp2)
+        else:
+            print("Expresion en numero entero no tiene valor")
+            ms.AddMensaje(MS.Mensaje("Expresion en numero entero no tiene valor",self.linea,self.columna,True,"Semantico"))
 
 
     def GetTipo(self,ts,ms):
@@ -203,7 +214,6 @@ class Variable(Exp) :
                             #print("fin"+str(i))
                             #obtiene valor
                             recorrido+=str(accesos[i])
-                            print ("recorrido:"+recorrido)
                             if accesos[i] in level:
                                 if sym.reference is None:
                                     value= level[accesos[i]] 
@@ -211,7 +221,9 @@ class Variable(Exp) :
                                     if sym.posicion is  not None:
                                         if recorrido in sym.posicion:
                                             refs = ts.obtener(sym.posicion[recorrido])
+
                                             value = refs.valor
+                                            level[accesos[i]] = value
                                         else:
                                             value= level[accesos[i]]
                                     else:

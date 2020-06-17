@@ -349,32 +349,32 @@ class Gramatica():
                 | EXP dividido EXP
                 | EXP modulo EXP'''
         if t[2] == '+'  : 
-            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MAS)
+            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MAS,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             if GLO.isdesc:
                 GLO.gramatica[24] = GLO.gram[97]
             else:
                 GLO.gramatica[24] = GLO.gram[24]
         elif t[2] == '-': 
-            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MENOS)
+            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MENOS,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             if GLO.isdesc:
                 GLO.gramatica[25] = GLO.gram[98]
             else:
                 GLO.gramatica[25] = GLO.gram[25]
         elif t[2] == '*': 
-            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.POR)
+            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.POR,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             if GLO.isdesc:
                 GLO.gramatica[26] = GLO.gram[99]
             else:
                 GLO.gramatica[26] = GLO.gram[26]
         elif t[2] == '/': 
-            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.DIVIDIDO)
+            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.DIVIDIDO,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             if GLO.isdesc:
                 GLO.gramatica[27] = GLO.gram[100]
             else:
                 GLO.gramatica[27] = GLO.gram[27]
             
         elif t[2] == '%': 
-            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MODULO)
+            t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MODULO,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
             if GLO.isdesc:
                 GLO.gramatica[28] = GLO.gram[101]
             else:
@@ -544,12 +544,8 @@ class Gramatica():
     def p_error(self,t):    
         if t is not None:
             self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(t.value),t.lineno,self.find_column(self.input,t) ,True,"Sintactico"))
-            while 1:
-                tok = yacc.token()             # Get the next token
-                if not tok or tok.type == 'ptocoma': 
-                    break
+            
             yacc.errok()
-            return tok
 
         else:
             self.ms_gramatica.AddMensaje(MS.Mensaje("No se pudo recuperar: ",0,0 ,True,"Sintactico"))

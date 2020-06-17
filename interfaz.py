@@ -531,7 +531,7 @@ class Notepad:
             except:
                 print ("No se genero el arbol")
             #self.ToTS.config(state='normal')
-            #self.ToERR.config(state='disabled')
+            self.ToERR.config(state='disabled')
             
         else:
             print("Se encontraron errores")
@@ -546,7 +546,7 @@ class Notepad:
                 print(Mensaje.constructError())
                 salida+=Mensaje.constructError()
             #self.ToTS.config(state='disabled')
-            #self.ToERR.config(state='normal')
+            self.ToERR.config(state='normal')
 
         self.setText(salida)
         self.ts_global = ts_global
@@ -585,7 +585,7 @@ class Notepad:
         self.DebNX = Button(self.Frame1, text = 'Next',bd=0,state ='disabled',command =self.debug_next)
         self.DebST = Button(self.Frame1, text = 'Stop',bd=0,state='disabled',command =self.debug_stop)
         self.ToGRA = Button(self.Frame1, text = 'Gramatica',command =self.showGRA)
-        self.ToERR = Button(self.Frame1, text = 'Tabla Errores',command =self.showTE,state='normal')
+        self.ToERR = Button(self.Frame1, text = 'Tabla Errores',command =self.showTE,state='disabled')
         self.MenuBar = Menu(GLO.window) 
         self.BarFile = Menu(self.MenuBar, tearoff=0) 
         self.BarEdit = Menu(self.MenuBar, tearoff=0) 

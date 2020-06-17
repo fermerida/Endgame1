@@ -96,11 +96,9 @@ class Asignacion(Instruccion) :
                 
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    if reference.posicion is None:
-                        refsymbol = TS.Simbolo(sym.reference, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
-                        simbolo.SetReference(sym.reference)
-                        ts.actualizar(refsymbol)
-                    
+                    refsymbol = TS.Simbolo(sym.reference, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
+                    simbolo.SetReference(sym.reference)
+                    ts.actualizar(refsymbol)
                 ts.actualizar(simbolo)
 
             else:
@@ -129,13 +127,22 @@ class Asignacion(Instruccion) :
             accesos = self.CheckA(self.var.accesos,ts,ms)
             isint = self.CheckInt(self.var.accesos,ts,ms)
             level=arreglo
+            recorrido = ""
             for i in range(len(accesos)):
                 #print("lenght: "+str(len(accesos)))
                 if i==(len(accesos))-1:
                     #print("fin"+str(i)+str(accesos[i])+str(val)+str(level))
                     #guardar valor
+                    recorrido+=str(accesos[i])
                     level[accesos[i]] = val
+                    if sym is not None:
+                        if sym.reference is not None:
+                            if sym.posicion is  not None:
+                                            if recorrido in sym.posicion:
+                                                refs = ts.obtener(sym.posicion[recorrido])
+                                                refs.valor = val
                 else:
+                    recorrido+=str(accesos[i])
                     if accesos[i] in level:
                         if type(level[accesos[i]]) is dict:
                             #agregar a elemento
@@ -182,11 +189,17 @@ class Asignacion(Instruccion) :
             simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,dim,self.etiqueta.id,declarada)
 
             if sym is not None:
+                if sym.posicion is not None:
+                    simbolo.posicion = sym.posicion
+                    simbolo.SetReference(sym.reference)
                 ts.actualizar(simbolo)
-                if(sym.reference != None):
+        
+                if(sym.reference != None) and (sym.posicion is None):
                     reference = ts.obtener(sym.reference)
                     refsymbol = TS.Simbolo(reference, array.GetTipo(ts,ms), array,tipo_et,dim,self.etiqueta.id,declarada)
                     ts.actualizar(refsymbol)
+                    simbolo.SetReference(sym.reference)
+
             
             else:
                 ts.agregar(simbolo)
