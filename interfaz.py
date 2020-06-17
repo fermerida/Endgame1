@@ -24,7 +24,7 @@ import ASTDES as ARDES
 from TreeMaker import *
 from scrollimage import ScrollableImage   
 import sys
-sys.setrecursionlimit(1800)
+sys.setrecursionlimit(2000)
 
 class TextLineNumbers(tk.Canvas):
     def __init__(self, *args, **kwargs):
@@ -499,7 +499,7 @@ class Notepad:
 
 
     def analizar(self):
-
+        print("current limit:"+str(sys.getrecursionlimit()))
         print("Iniciando analisis")
         ts_global = TS.TablaDeSimbolos()
         ms_global = MS.Mensajes()
@@ -778,7 +778,7 @@ class Notepad:
                     colorize(content, color="orange")
                 elif token == Token.Name:
                     if (content == "char")or(content=="goto"):
-                        colorize(content, color="purple")
+                        colorize(content, color="#20C2BA")
                     else:
                         colorize(content, color="green")
                 elif (content == "$"):

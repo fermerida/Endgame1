@@ -21,9 +21,17 @@ class Simbolo() :
         self.dim= dim
         self.ambito = ambito
         self.declarada = declarada
+        self.posicion = None
 
     def SetReference(self, id):
         self.reference = id
+
+    def SetPosicion(self,id, accesos):
+        if self.posicion is None:
+            self.posicion = {}
+            self.posicion[id] = accesos
+        else:
+            self.posicion[id] = accesos
 
 class TablaDeSimbolos() :
     'Esta clase representa la tabla de simbolos'

@@ -1,5 +1,6 @@
 from instrucciones import Instruccion
 from Asignacion import *
+from RefAsignacion import *
 import ts as TS
 import globalvar as GLO
 
@@ -28,6 +29,8 @@ class Etiqueta() :
         result = None
         for instr in self.instrucciones :
             if isinstance(instr,Asignacion):
+                instr.etiqueta = self
+            if isinstance(instr,RefAsignacion):
                 instr.etiqueta = self
             result = instr.ejecutar(ts,ms)
             if result == False:

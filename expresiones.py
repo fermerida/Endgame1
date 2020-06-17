@@ -2,7 +2,6 @@ from enum import Enum
 import ts as TS
 import mensajes as MS
 import sys
-sys.setrecursionlimit(1800)
 
 class OPERACION_ARITMETICA(Enum) :
     MAS = 1
@@ -34,19 +33,14 @@ class OPERACION_BITWISE(Enum) :
     SHIFTR = 6
 
 class Exp:
-    '''
-        Esta clase representa una expresión numérica
-    '''
+
     def GetValor(self,ts,ms):
         pass
     def GetTipo(self,ts,ms):
         pass
 
 class Aritmetica(Exp) :
-    '''
-        Esta clase representa la Expresión Aritmética Binaria.
-        Esta clase recibe los operandos y el operador
-    '''
+ 
 
     def __init__(self, exp1, exp2, operador) :
         self.exp1 = exp1
@@ -84,10 +78,7 @@ class Aritmetica(Exp) :
 
 
 class ExpresionNegativo(Exp) :
-    '''
-        Esta clase representa la Expresión Aritmética Negativa.
-        Esta clase recibe la expresion
-    '''
+ 
     def __init__(self, exp) :
         self.exp = exp
 
@@ -99,10 +90,7 @@ class ExpresionNegativo(Exp) :
         return self.exp.GetTipo(ts,ms)
 
 class ExpresionAbsoluto(Exp) :
-    '''
-        Esta clase representa la Expresión Aritmética Negativa.
-        Esta clase recibe la expresion
-    '''
+
     def __init__(self, exp) :
         self.exp = exp
 
@@ -129,9 +117,7 @@ class ExpresionInteger(Exp) :
         return TS.TIPO_DATO.INTEGER
 
 class RandomList(Exp) :
-    '''
-        Esta clase representa una expresión numérica entera o decimal.
-    '''
+  
 
     def __init__(self, values) :
         self.values = values
@@ -143,9 +129,7 @@ class RandomList(Exp) :
     def GetTipo(self,ts,ms):
         return TS.TIPO_DATO.ARRAY
 class ExpresionFloat(Exp) :
-    '''
-        Esta clase representa una expresión numérica entera o decimal.
-    '''
+
 
     def __init__(self, val = 0) :
         self.val = val
@@ -195,11 +179,14 @@ class Variable(Exp) :
                     return sym.valor
                 else:
                     referencia = ts.obtener(sym.reference)
+                    refsymbol = TS.Simbolo(self.id, referencia.tipo, referencia.valor,referencia.rol,referencia.dim,sym.ambito,sym.declarada)
+                    ts.actualizar(refsymbol)
                     if referencia != None:
                         return referencia.valor
             else:
                 accesos = self.GetAccesos(self.accesos,ts,ms)
                 isint = self.CheckInt(self.accesos,ts,ms)
+                recorrido = ""
                 if (accesos is None):
                     print("Error obteniendo los accesos")
                     ms.AddMensaje(MS.Mensaje("Error obteniendo los accesos",self.linea,self.columna,True,"Semantico"))
@@ -209,18 +196,32 @@ class Variable(Exp) :
                     
                     value = arreglo
                     level=arreglo.values
+                    
                     #print("levels: "+str(level)+" from:"+ self.id)
                     for i in range(len(accesos)):
                         if i==(len(accesos))-1:
                             #print("fin"+str(i))
                             #obtiene valor
+                            recorrido+=str(accesos[i])
+                            print ("recorrido:"+recorrido)
                             if accesos[i] in level:
-                                value= level[accesos[i]] 
+                                if sym.reference is None:
+                                    value= level[accesos[i]] 
+                                else:
+                                    if sym.posicion is  not None:
+                                        if recorrido in sym.posicion:
+                                            refs = ts.obtener(sym.posicion[recorrido])
+                                            value = refs.valor
+                                        else:
+                                            value= level[accesos[i]]
+                                    else:
+                                        value= level[accesos[i]] 
                             else:
                                 print("Error acceso a esta posicion esta vacios")
                                 ms.AddMensaje(MS.Mensaje("Error acceso a esta posicion esta vacios",self.linea,self.columna,True,"Semantico"))
 
                         else:
+                            recorrido+=str(accesos[i])
                             if accesos[i] in level:
                                 if isinstance(level[accesos[i]],dict):
                                     #agregar a elemento
@@ -272,6 +273,7 @@ class Variable(Exp) :
                     print("No se puede aceeder a una variable con este tipo")
                     ms.AddMensaje(MS.Mensaje("No se puede aceeder a una variable con este tipo",self.linea,self.columna,True,"Semantico"))
 
+
         print("No existe esta variable")
         ms.AddMensaje(MS.Mensaje("No existe esta variable",self.linea,self.columna,True,"Semantico"))
 
@@ -289,11 +291,8 @@ class Variable(Exp) :
         return None
 
         
-class ExpresionDobleComilla(Exp) :
-    '''
-        Esta clase representa una cadena entre comillas doble.
-        Recibe como parámetro el valor del token procesado por el analizador léxico
-    '''
+class ExpresionCadena(Exp) :
+
 
     def __init__(self, val) :
         self.val = val
@@ -307,22 +306,10 @@ class ExpresionDobleComilla(Exp) :
     def GetTipo(self,ts,ms):
         return TS.TIPO_DATO.CHAR
 
-class ExpresionCadenaNumerico(Exp) :
-    '''
-        Esta clase representa una expresión numérica tratada como cadena.
-        Recibe como parámetro la expresión numérica
-    '''
-    def __init__(self, exp) :
-        self.exp = exp
 
-    def GetValor(self,ts,ms):
-        return str(self.exp.GetValor(ts,ms))
 
 class Relacional() :
-    '''
-        Esta clase representa la expresión lógica.
-        Esta clase recibe los operandos y el operador
-    '''
+
 
     def __init__(self, exp1, exp2, operador,linea,columna) :
         self.exp1 = exp1
@@ -349,10 +336,7 @@ class Relacional() :
         return TS.TIPO_DATO.BOOLEAN
 
 class Logica() :
-    '''
-        Esta clase representa la expresión lógica.
-        Esta clase recibe los operandos y el operador
-    '''
+
 
     def __init__(self, exp1, exp2, operador) :
         self.exp1 = exp1
@@ -363,20 +347,20 @@ class Logica() :
         exp1 = self.exp1.GetValor(ts,ms)
         if (self.exp2 != None):
             exp2 = self.exp2.GetValor(ts,ms)
-        if self.operador == OPERACION_LOGICA.NOT : return not(exp1)
-        if self.operador == OPERACION_LOGICA.AND : return exp1 and exp2
-        if self.operador == OPERACION_LOGICA.OR : return exp1 or exp2
-        if self.operador == OPERACION_LOGICA.XOR : return (not exp2 and exp1) or (not exp1 and exp2)
+        if exp1 is not None:
+            if self.operador == OPERACION_LOGICA.NOT : return not(exp1)
+            if self.operador == OPERACION_LOGICA.AND : return exp1 and exp2
+            if self.operador == OPERACION_LOGICA.OR : return exp1 or exp2
+            if self.operador == OPERACION_LOGICA.XOR : return (not exp2 and exp1) or (not exp1 and exp2)
+        else:
+            print("Operacion logica no tiene un valor")
 
     def GetTipo(self,ts,ms):
         return TS.TIPO_DATO.BOOLEAN
 
 
 class Bitwise() :
-    '''
-        Esta clase representa la expresión lógica.
-        Esta clase recibe los operandos y el operador
-    '''
+
 
     def __init__(self, exp1, exp2, operador) :
         self.exp1 = exp1
@@ -400,10 +384,7 @@ class Bitwise() :
 
 
 class ExpConvertida(Exp) :
-    '''
-        Esta clase representa una expresión numérica tratada como cadena.
-        Recibe como parámetro la expresión numérica
-    '''
+
     def __init__(self, exp, tipo,linea,columna) :
         self.exp = exp
         self.tipo = tipo
@@ -491,5 +472,5 @@ class ExpConvertida(Exp) :
         elif isinstance(returnee, dict):
             return RandomList(returnee)
         else:
-            return ExpresionDobleComilla(returnee)
+            return ExpresionCadena(returnee)
 

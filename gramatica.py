@@ -310,8 +310,8 @@ class Gramatica():
 
 
     def p_ASIGNACION_REF(self,t) :
-        'ASIGNACION   : VAR igual band dollar ID ptocoma'
-        t[0] =RefAsignacion(t[1], t[5],t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
+        'ASIGNACION   : VAR igual band VAR ptocoma'
+        t[0] =RefAsignacion(t[1], t[4],t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
         GLO.gramatica[19] = GLO.gram[19]
 
 
@@ -350,19 +350,35 @@ class Gramatica():
                 | EXP modulo EXP'''
         if t[2] == '+'  : 
             t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MAS)
-            GLO.gramatica[24] = GLO.gram[24]
+            if GLO.isdesc:
+                GLO.gramatica[24] = GLO.gram[97]
+            else:
+                GLO.gramatica[24] = GLO.gram[24]
         elif t[2] == '-': 
             t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MENOS)
-            GLO.gramatica[25] = GLO.gram[25]
+            if GLO.isdesc:
+                GLO.gramatica[25] = GLO.gram[98]
+            else:
+                GLO.gramatica[25] = GLO.gram[25]
         elif t[2] == '*': 
             t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.POR)
-            GLO.gramatica[26] = GLO.gram[26]
+            if GLO.isdesc:
+                GLO.gramatica[26] = GLO.gram[99]
+            else:
+                GLO.gramatica[26] = GLO.gram[26]
         elif t[2] == '/': 
             t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.DIVIDIDO)
-            GLO.gramatica[27] = GLO.gram[27]
+            if GLO.isdesc:
+                GLO.gramatica[27] = GLO.gram[100]
+            else:
+                GLO.gramatica[27] = GLO.gram[27]
+            
         elif t[2] == '%': 
             t[0] = Aritmetica(t[1], t[3], OPERACION_ARITMETICA.MODULO)
-            GLO.gramatica[28] = GLO.gram[28]
+            if GLO.isdesc:
+                GLO.gramatica[28] = GLO.gram[101]
+            else:
+                GLO.gramatica[28] = GLO.gram[28]
 
 
 
@@ -376,22 +392,40 @@ class Gramatica():
                 '''
         if t[2] == '>'    : 
             t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYOR,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
-            GLO.gramatica[29] = GLO.gram[29]
+            if GLO.isdesc:
+                GLO.gramatica[24] = GLO.gram[97]
+            else:
+                GLO.gramatica[24] = GLO.gram[91]
         elif t[2] == '<'  : 
             t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENOR,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
-            GLO.gramatica[30] = GLO.gram[30]
+            if GLO.isdesc:
+                GLO.gramatica[30] = GLO.gram[92]
+            else:
+                GLO.gramatica[30] = GLO.gram[30]
         elif t[2] == '>=' : 
             t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MAYORIGUAL,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
-            GLO.gramatica[31] = GLO.gram[31]
+            if GLO.isdesc:
+                GLO.gramatica[31] = GLO.gram[93]
+            else:
+                GLO.gramatica[31] = GLO.gram[31]
         elif t[2] == '<=' : 
             t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.MENORIGUAL,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
-            GLO.gramatica[32] = GLO.gram[32]
+            if GLO.isdesc:
+                GLO.gramatica[32] = GLO.gram[94]
+            else:
+                GLO.gramatica[32] = GLO.gram[32]
         elif t[2] == '==' : 
             t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.IGUAL,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
-            GLO.gramatica[33] = GLO.gram[33]
+            if GLO.isdesc:
+                GLO.gramatica[33] = GLO.gram[89]
+            else:
+                GLO.gramatica[33] = GLO.gram[33]
         elif t[2] == '!=' : 
             t[0] = Relacional(t[1], t[3], OPERACION_RELACIONAL.DIFERENTE,t.slice[2].lineno,self.find_column(self.input,t.slice[2]))
-            GLO.gramatica[34] = GLO.gram[34]
+            if GLO.isdesc:
+                GLO.gramatica[34] = GLO.gram[90]
+            else:
+                GLO.gramatica[34] = GLO.gram[34]
 
     def p_EXP_LOG(self,t) :
         '''EXP : EXP land EXP
@@ -472,12 +506,12 @@ class Gramatica():
         GLO.gramatica[50] = GLO.gram[50]
     def p_EXP_STR(self,t) :
         'EXP     : CADENA'
-        t[0] = ExpresionDobleComilla(t[1])
+        t[0] = ExpresionCadena(t[1])
         GLO.gramatica[51] = GLO.gram[51]
 
     def p_EXP_CHAR(self,t) :
         'EXP     : CHAR'
-        t[0] = ExpresionDobleComilla(t[1])
+        t[0] = ExpresionCadena(t[1])
         GLO.gramatica[52] = GLO.gram[52]
 
     def p_CONVERTIR(self,t) :
@@ -507,10 +541,9 @@ class Gramatica():
         t[0] = Read(t.slice[2].lineno,self.find_column(self.input,t.slice[1]))
         GLO.gramatica[57] = GLO.gram[57]
 
-    def p_error(self,t):
+    def p_error(self,t):    
         if t is not None:
             self.ms_gramatica.AddMensaje(MS.Mensaje("Se encontro: "+str(t.value),t.lineno,self.find_column(self.input,t) ,True,"Sintactico"))
-            #print("Error sintáctico en '%s'" % p.value)
             while 1:
                 tok = yacc.token()             # Get the next token
                 if not tok or tok.type == 'ptocoma': 

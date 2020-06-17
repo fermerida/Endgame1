@@ -23,6 +23,8 @@ class GoTo(Instruccion) :
                 for instr in et.instrucciones :
                     if isinstance(instr,Asignacion):
                         instr.etiqueta = et
+                    if isinstance(instr,RefAsignacion):
+                        instr.etiqueta = et
                     result = instr.ejecutar(ts,ms)
                     if result == False:
                         break

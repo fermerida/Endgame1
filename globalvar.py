@@ -339,7 +339,86 @@ gram={
     82:{
         'rule': 'EKP  -> empty',
         'action': 'EKP.val  = 0;'
+    },
+
+
+
+
+    83:{
+        'rule': 'EAP  -> lor EB EAP',
+        'action': 'EAP = EAPh.val or EB.val;'
+    },
+    84:{
+        'rule': 'EBP  -> land EC EBP',
+        'action': 'EBP = EBPh.val and EC.val;'
+    },
+    85:{
+        'rule': 'ECP  -> bor ED ECP',
+        'action': 'EAP = ECPh.val | ED.val;'
+    },
+    86:{
+        'rule': 'EDP  -> wxor EE EDP',
+        'action': 'EDP = EDPh.val xor EE.val;'
+    },
+    87:{
+        'rule': 'EEP  -> bxor EF EEP',
+        'action': 'EEP = EEPh.val ^ EF.val;'
+    },
+    88:{
+        'rule': 'EFP  -> band EG EFP',
+        'action': 'EFP = EFPh.val & EG.val;'
+    },
+    89:{
+        'rule': 'EGP  -> igualdad EH EGP',
+        'action': 'EGP = EGPh.val == EH.val;'
+    },
+    90:{
+        'rule': 'EGP  -> diferente EH EGP',
+        'action': 'EGP = EGPh.val != EH.val;'
+    },
+    91:{
+        'rule': 'EHP  -> mayor EI EHP',
+        'action': 'EHP = EHPh.val > EI.val;'
+    },
+    92:{
+        'rule': 'EHP  -> menor EI EHP',
+        'action': 'EHP = EHPh.val < EI.val;'
+    },
+    93:{
+        'rule': 'EHP  -> mayorigual EI EHP',
+        'action': 'EHP = EHPh.val >= EI.val;'
+    },
+    94:{
+        'rule': 'EHP  -> menorigual EI EHP',
+        'action': 'EHP = EHPh.val <= EI.val;'
+    },
+
+    97:{
+        'rule': 'EJP  -> mas EK EJP',
+        'action': 'EJP = EJPh.val + EK.val;'
+    },
+    98:{
+        'rule': 'EJP  -> menos EK EJP',
+        'action': 'EJP = EJPh.val - EK.val;'
+    },
+    99:{
+        'rule': 'EKP  -> por EXP EKP',
+        'action': 'EKP = EKPh.val * EXP.val;'
+    },
+    100:{
+        'rule': 'EKP  -> dividido EXP EKP',
+        'action': 'EKP = EKPh.val / EXP.val;'
+    },
+    101:{
+        'rule': 'EKP  -> modulo EXP EKP',
+        'action': 'EKP = EKPh.val % EXP.val;'
     }
+
+
+
+
+
+
 
 
 

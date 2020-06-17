@@ -93,11 +93,15 @@ class Asignacion(Instruccion) :
                 self.pila = GLO.pila
                 declarada = self.Declaradaen()
                 simbolo = TS.Simbolo(self.var.id, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
-                ts.actualizar(simbolo)
+                
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    refsymbol = TS.Simbolo(sym.reference, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
-                    ts.actualizar(refsymbol)
+                    if reference.posicion is None:
+                        refsymbol = TS.Simbolo(sym.reference, self.valor.GetTipo(ts,ms), val,tipo_et,1,self.etiqueta.id,declarada)
+                        simbolo.SetReference(sym.reference)
+                        ts.actualizar(refsymbol)
+                    
+                ts.actualizar(simbolo)
 
             else:
                
@@ -171,7 +175,6 @@ class Asignacion(Instruccion) :
                 rol = "Arreglo"
             else:
                 rol = "Struct"
-            #print("es este:"+str(array.values)+" from: "+self.var.id)
             dim = len(accesos)
             GLO.pila = GLO.pila + dim + len(array.values)
             self.pila = GLO.pila
@@ -182,7 +185,7 @@ class Asignacion(Instruccion) :
                 ts.actualizar(simbolo)
                 if(sym.reference != None):
                     reference = ts.obtener(sym.reference)
-                    reference = TS.Simbolo(sym.reference, array.GetTipo(ts,ms), array,tipo_et,dim,self.etiqueta.id,declarada)
+                    refsymbol = TS.Simbolo(reference, array.GetTipo(ts,ms), array,tipo_et,dim,self.etiqueta.id,declarada)
                     ts.actualizar(refsymbol)
             
             else:

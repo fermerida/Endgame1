@@ -15,6 +15,7 @@ class Print(Instruccion) :
         self.columna =columna
 
     def ejecutar(self, ts,ms):
+        
         valor = self.cad.GetValor(ts,ms)
         if isinstance(valor,Arreglo):
             valor = valor.GetElements(ts,ms)

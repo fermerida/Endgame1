@@ -49,3 +49,40 @@ main:
     print($t6);
     $t7=7;
     print($t7);
+
+
+
+main: 
+#agenda
+    $t1=1;
+    print($t1);
+    $t2=2;
+    print($t2);
+    goto ex;
+
+    ex:
+    $t6=&$t2;
+    print($t6);
+    $t7=7;
+    print($t7);
+
+
+main:
+    $a = 2;
+    $b[0]= &$a;
+    $b[0]= $b[0]+2;
+    $a = $a + 1;
+    print($a);
+    print("\n");
+    print($b[0]);
+
+
+
+main:
+    $a = 2;
+    $b= &$a;
+    $b= $b+2;
+    $a = $a + 1;
+    print($a);
+    print("\n");
+    print($b);

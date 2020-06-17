@@ -11,12 +11,13 @@ class RefAsignacion(Instruccion) :
         Recibe como parámetro el identificador a asignar y el valor que será asignado.
     '''
 
-    def __init__(self, var, reference,linea, columna) :
+    def __init__(self, var, refvar,linea, columna) :
         self.var = var
-        self.reference = reference
+        self.refvar = refvar
         self.linea = linea
         self.columna =columna
         self.pila = 0
+        self.etiqueta=None
 
     def CheckA(self,list, ts,ms):
         isarray = True
@@ -70,22 +71,23 @@ class RefAsignacion(Instruccion) :
 
     def ejecutar(self, ts,ms):
         sym = ts.obtener(self.var.id)
-        reference = ts.obtener(self.reference)
+        reference = ts.obtener(self.refvar.id)
         tipo_et=self.DefineRol(self.var.id)
+        recorrido = ""
         print("id: "+str(self.var.id)+" referencia: " + str(reference))
         if self.var.accesos == None:
             if sym is not None:
                 GLO.pila = GLO.pila +1
                 self.pila = GLO.pila
                 declarada = self.Declaradaen()
-                simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,tipo_et,reference.dim,reference.etiqueta,declarada)
+                simbolo = TS.Simbolo(self.var.id, reference.tipo, self.refvar.GetValor(ts,ms),tipo_et,reference.dim,self.etiqueta.id,declarada)
                 simbolo.SetReference(reference.id)
                 ts.actualizar(simbolo)
             else:
                 GLO.pila = GLO.pila +1
                 self.pila = GLO.pila
                 declarada = self.Declaradaen()
-                simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,tipo_et,reference.dim,reference.etiqueta,declarada)      # inicializamos con 0 como valor por defecto
+                simbolo = TS.Simbolo(self.var.id, reference.tipo, self.refvar.GetValor(ts,ms),tipo_et,reference.dim,self.etiqueta.id,declarada)     
                 simbolo.SetReference(reference.id)
                 ts.agregar(simbolo)
         else:
@@ -109,8 +111,15 @@ class RefAsignacion(Instruccion) :
                 if i==(len(accesos))-1:
                     #print("fin"+str(i)+str(accesos[i])+str(val)+str(level))
                     #guardar valor
-                    level[accesos[i]] = reference.valor
+                    recorrido+=str(accesos[i])
+                    if isinstance(self.refvar.GetValor(ts,ms) , Arreglo):
+                        level[accesos[i]] = self.refvar.GetValor(ts,ms).values
+
+                    else:
+                        level[accesos[i]] = self.refvar.GetValor(ts,ms)
+
                 else:
+                    recorrido+=str(accesos[i])
                     if accesos[i] in level:
                         if type(level[accesos[i]]) is dict:
                             #agregar a elemento
@@ -121,7 +130,7 @@ class RefAsignacion(Instruccion) :
                                         if isinstance(accesos[i+1],int):
                                             if accesos[i+1] < len(level[accesos[i]]):
                                                 #print("una cadenita:"+str(i))
-                                                level[accesos[i]] = level[accesos[i]][:accesos[i+1]] + str(reference.valor) + level[accesos[i]][accesos[i+1]+1:] 
+                                                level[accesos[i]] = level[accesos[i]][:accesos[i+1]] + str(self.refvar.GetValor(ts,ms)) + level[accesos[i]][accesos[i+1]+1:] 
                                                 break
                                             else:
                                                 r = len(level[accesos[i]])
@@ -129,7 +138,7 @@ class RefAsignacion(Instruccion) :
                                                 while r < accesos[i+1]:
                                                     adding = adding + " "
                                                     r+=1
-                                                adding += str(reference.valor)
+                                                adding += str(self.refvar.GetValor(ts,ms))
                                                 level[accesos[i]] = level[accesos[i]] + adding
                                         else:
                                             print("Solo se puede acceder con un numero a una cadena")
@@ -156,15 +165,16 @@ class RefAsignacion(Instruccion) :
             GLO.pila = GLO.pila +1
             self.pila = GLO.pila
             declarada = self.Declaradaen()
-            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,reference.dim,reference.etiqueta,declarada)
+            simbolo = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,    tipo_et,reference.dim,self.etiqueta.id,declarada)
+            #simbolo = TS.Simbolo(self.var.id, reference.tipo, reference.valor,tipo_et,reference.dim,self.etiqueta.id,declarada)     
+            simbolo.SetReference(reference.id)
+            simbolo.SetPosicion(recorrido,reference.id)
+
+            ts.agregar(simbolo)
 
             if sym is not None:
                 ts.actualizar(simbolo)
-                if(sym.reference != None):
-                    reference = ts.obtener(sym.reference)
-                    reference = TS.Simbolo(self.var.id, array.GetTipo(ts,ms), array,tipo_et,reference.dim,reference.etiqueta,reference.declarada)
-                    ts.actualizar(refsymbol)
-            
+                
             else:
                 ts.agregar(simbolo)
 

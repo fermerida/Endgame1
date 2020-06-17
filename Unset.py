@@ -14,7 +14,7 @@ class Unset(Instruccion) :
         self.columna = columna
 
     def ejecutar(self, ts,ms):
-        if ( isinstance(self.var,Variable)) or ( isinstance(self.var,ExpresionDobleComilla)):
+        if ( isinstance(self.var,Variable)) or ( isinstance(self.var,ExpresionCadena)):
             key = self.var.GetName(ts,ms)
             #print("unsetting" + key)
             ts.eliminar(key)
